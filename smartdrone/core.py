@@ -73,7 +73,8 @@ class ModeState:
     
     def execute(self):
         """From current status, compute next update of navigation or doing if needed.
-        Not use a simple list of commands to facilitate complex algorithm. 
+        Not use a simple list of commands to facilitate complex algorithm.
+        Standard execution should be less than 2s
         """
         sd_logger.debug("smart_algorithm")
 
