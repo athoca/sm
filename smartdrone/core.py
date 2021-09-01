@@ -16,6 +16,7 @@ class SmartDrone(dronekit.Vehicle):
             self.smartmode.precheck_mode_failsafe()
             self.smartmode.run()
             self.check_mode_change()
+            #TODO: update wait for a total time = 2s each loop
             wait_5s()
 
     def check_mode_change(self):
@@ -30,18 +31,19 @@ class SmartDrone(dronekit.Vehicle):
 class SmartMode:
     def __init__(self, vehicle, name=None, state=None):
         self.vehicle = vehicle
-        self.name = name if name else 'ardupilot_mode'
+        self.name = name if name else 'smart_mode'
         # Each SmartMode know its State Machine Flow and the FIRST ONE
-        # pass vehicle to get update of pixhawk controller
+        # Pass vehicle to get update of pixhawk controller
         self.state = state if state else ModeState(self.vehicle, self) 
     
     def precheck_mode_failsafe(self):
         """Check if drone status is ready to run the mode. Mode ready means all state ready.
         """
         if True:
+            sd_logger.info("----------------------------------")
             sd_logger.info("NOT IMPLEMENTED. Drone status, prechecked failsafe for mode {}".format(self.name))
         else:
-            sd_logger.info("Drone status prechecked is not failsafe for mode {}".format(self.name))
+            sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
             sd_logger.info("Back to AltHold mode")
 
     def run(self):
@@ -63,10 +65,10 @@ class ModeState:
         self.reset()
 
     def reset(self):
-        self.complete = False
+        self.complete_code = 0
 
     def handle(self):
-        sd_logger.info("Run state {} in smart mode".format(self.name, self.mode.name))
+        sd_logger.info("Run state {} in smart mode {}".format(self.name, self.mode.name))
         self.execute()
         self.update_navigation()
         self.update_doing()
@@ -84,6 +86,12 @@ class ModeState:
     def update_doing(self):
         # Change mode, Failsafe
         sd_logger.debug("update_doing")
+    
+    def __eq__(self, name):
+        if self.name==name:
+            return True
+        else:
+            return False
 
 
 
