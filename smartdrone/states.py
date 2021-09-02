@@ -1,6 +1,7 @@
 from smartdrone.core import ModeState
 from smartdrone.utils import sd_logger
 import random
+from dronekit import VehicleMode
 
 n = random.randint(0,22)
 
@@ -13,9 +14,13 @@ class PL_ManualControl(ModeState):
     def _execute(self):
         """ Smart drone do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED
         """
-        sd_logger.debug("Smart drone do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED...")
+        sd_logger.info("Smart drone do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED...")
         # TODO: add complete code for change smartmode. Now only one smartmode.
-        self.complete_code = random.randint(0,1)
+        if self.vehicle.mode == VehicleMode('GUIDED'):
+            if self.last_mode == VehicleMode('LOITER'):
+                self.complete_code = 1
+                self.last_mode = VehicleMode('GUIDED')
+
     def _update_navigation(self):
         pass
     def _update_doing(self):

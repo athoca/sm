@@ -62,6 +62,7 @@ class ModeState:
         self.vehicle = vehicle
         self.mode = mode
         self.name = name if name else 'noname_state'
+        self.last_mode = None
         self.reset()
 
     def reset(self):
@@ -72,6 +73,7 @@ class ModeState:
         self._execute()
         self._update_navigation()
         self._update_doing()
+        self._update_last_mode()
     
     def _execute(self):
         """From current status, compute next update of navigation or doing if needed.
@@ -86,6 +88,11 @@ class ModeState:
     def _update_doing(self):
         # Change mode, Failsafe
         sd_logger.debug("update_doing")
+
+    def _update_last_mode(self):
+        if self.last_mode != self.vehicle.mode:
+            sd_logger.debug("update State last_mode from {} to {}".format(self.last_mode, self.vehicle.mode))
+            self.last_mode = self.vehicle.mode
     
     def __eq__(self, name):
         if self.name==name:
