@@ -86,6 +86,8 @@ class PL_LandingPadLand(ModeState):
             while self.vehicle.mode != VehicleMode('LAND') or time.time()-start<wait_time:
                 self.vehicle.mode = VehicleMode('LAND')
                 time.sleep(0.2) # wait time for set mode done
+        else:
+            self.vehicle.mode = VehicleMode('LAND')
 
 
 class PL_IRBeaconSearch(ModeState):
@@ -115,6 +117,8 @@ class PL_IRBeaconSearch(ModeState):
             while self.vehicle.mode != VehicleMode('GUIDED') or time.time()-start<wait_time:
                 self.vehicle.mode = VehicleMode('GUIDED')
                 time.sleep(0.2) # wait time for set mode done
+        else:
+            self.vehicle.mode = VehicleMode('GUIDED')
 
 
 

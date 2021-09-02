@@ -19,30 +19,25 @@ class PLMode(SmartMode):
         complete_code = self.state.complete_code
         # TODO: add complete code for change mode
         # TODO: use dict for elegant and easy to verify State Machine algorithm
+
+        # TODO: check current mode change to LOITER => not overwrite by below.
         if complete_code:
             sd_logger.debug("Complete code {}".format(complete_code))
             if complete_code == 2:
                 self.state = PL_ManualControl(self.vehicle, self)
-                self.state.reset()
             elif complete_code == 3:
                 self.state = PL_LandingPadSearch(self.vehicle, self)
-                self.state.reset()
             elif complete_code == 1:
                 if self.state == 'ManualControl': 
                     self.state = PL_LandingPadSearch(self.vehicle, self)
-                    self.state.reset()
                 elif self.state == 'LandingPadSearch': 
                     self.state = PL_LandingPadGo(self.vehicle, self)
-                    self.state.reset()
                 elif self.state == 'LandingPadGo': 
                     self.state = PL_LandingPadLand(self.vehicle, self)
-                    self.state.reset() 
                 elif self.state == 'LandingPadLand': 
                     self.state = PL_IRBeaconSearch(self.vehicle, self)
-                    self.state.reset()
                 elif self.state == 'IRBeaconSearch': 
                     self.state = PL_LandingPadLand(self.vehicle, self)
-                    self.state.reset() 
             
 
 class ArdupilotMode(SmartMode):
