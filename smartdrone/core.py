@@ -4,11 +4,11 @@ import dronekit
 from smartdrone.utils import sd_logger, wait_5s
 
 class SmartDrone(dronekit.Vehicle):
-    def __init__(self, smartmode, *args):
-        # super(SmartDrone, self).__init__(*args) # temporary remove to build the framework
-        # pass vehicle to get update of pixhawk controller
+    def __init__(self, *args):
+        super(SmartDrone, self).__init__(*args) # temporary remove to build the framework
         self.dronename = "SmartDrone"
-        self.smartmode = SmartMode(self) # default is a Ardupilot mode
+        # pass vehicle to get update of pixhawk controller
+        self.smartmode = SmartMode(self)
 
     def start_main_control_loop(self):
         sd_logger.info("Start main control loop!")

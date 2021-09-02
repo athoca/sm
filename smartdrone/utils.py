@@ -1,13 +1,12 @@
 import logging
 sd_logger = logging.getLogger('smartdrone')
 log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
-sd_logger.addHandler(console_handler)
+file_handler = logging.FileHandler('smartdrone.log')
+file_handler.setFormatter(log_formatter)
+sd_logger.addHandler(file_handler)
 sd_logger.setLevel(logging.DEBUG)
 
 import time
-
 def do_nothing():
     pass
 

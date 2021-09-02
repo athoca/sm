@@ -11,12 +11,15 @@ class PL_ManualControl(ModeState):
         self.name = 'ManualControl'
     
     def _execute(self):
+        """ Smart drone do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED
         """
-        """
-        sd_logger.debug("Executing manual control")
-        # TODO: add complete code for change mode
+        sd_logger.debug("Smart drone do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED...")
+        # TODO: add complete code for change smartmode. Now only one smartmode.
         self.complete_code = random.randint(0,1)
-
+    def _update_navigation(self):
+        pass
+    def _update_doing(self):
+        pass
 
 class PL_LandingPadSearch(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadGo, 2 => back: ManualControl
@@ -28,7 +31,7 @@ class PL_LandingPadSearch(ModeState):
         """
         """
         sd_logger.debug("Executing landing pad search")
-        # TODO: add complete code for change mode
+        # TODO: add complete code for change smartmode. Now only one smartmode.
         self.complete_code = random.randint(0,2)
 
 class PL_LandingPadGo(ModeState):
@@ -41,7 +44,7 @@ class PL_LandingPadGo(ModeState):
         """
         """
         sd_logger.debug("Executing landing pad go")
-        # TODO: add complete code for change mode
+        # TODO: add complete code for change smartmode. Now only one smartmode.
         self.complete_code = random.randint(0,3)
 
 class PL_LandingPadLand(ModeState):
@@ -54,7 +57,7 @@ class PL_LandingPadLand(ModeState):
         """
         """
         sd_logger.debug("Executing landing pad land")
-        # TODO: add complete code for change mode
+        # TODO: add complete code for change smartmode. Now only one smartmode.
         self.complete_code = random.randint(0,2)
 
 class PL_IRBeaconSearch(ModeState):
@@ -67,7 +70,7 @@ class PL_IRBeaconSearch(ModeState):
         """
         """
         sd_logger.debug("Executing IR beacon search")
-        # TODO: add complete code for change mode
+        # TODO: add complete code for change smartmode. Now only one smartmode.
         self.complete_code = random.randint(0,3)
 
 
