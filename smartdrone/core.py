@@ -61,6 +61,12 @@ class SmartMode:
             self.state = 'next_state'
             self.state.reset()
 
+    def __eq__(self, name):
+        if self.name==name:
+            return True
+        else:
+            return False
+
 
 class ModeState:
     def __init__(self, vehicle, mode, name=None):

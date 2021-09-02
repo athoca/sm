@@ -12,4 +12,4 @@ def PLvehicle():
 
 @pytest.fixture(scope="module")
 def plmode(PLvehicle):
-     return PLMode(PLvehicle)
+     return PLvehicle.smartmode

@@ -9,10 +9,10 @@ class PLSmartDrone(SmartDrone):
     def __init__(self, *args):
         super(PLSmartDrone, self).__init__(*args)
         self.dronename = "PLSmartDrone"
-        self.smartmode = ArdupilotMode(self)
+        self.smartmode = PLMode(self)
     
     def check_mode_change(self):
-        # TODO: update logic later.
+        # TODO: update logic later. Now auto update to PLMode
         if isinstance(self.smartmode, ArdupilotMode):
             lastmode = self.smartmode.name
             self.smartmode = PLMode(self)
