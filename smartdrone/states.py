@@ -16,15 +16,16 @@ class PL_ManualControl(ModeState):
         """
         sd_logger.info("Smart drone do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED...")
         # TODO: add complete code for change smartmode. Now only one smartmode.
-        if self.vehicle.mode == VehicleMode('GUIDED'):
-            if self.last_mode == VehicleMode('LOITER'):
-                self.complete_code = 1
-                self.last_mode = VehicleMode('GUIDED')
+        # sd_logger.debug(self.vehicle.last_mode)
+        self._update_complete_code()
 
     def _update_navigation(self):
         pass
     def _update_doing(self):
         pass
+    def _update_complete_code(self):
+        if self.vehicle.mode == VehicleMode('GUIDED') and self.vehicle.last_mode == VehicleMode('LOITER'):
+                self.complete_code = 1
 
 class PL_LandingPadSearch(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadGo, 2 => back: ManualControl

@@ -1,7 +1,7 @@
 """Use to declare all main Classes and Interface"""
 
 import dronekit
-from smartdrone.utils import sd_logger, wait_5s
+from smartdrone.utils import sd_logger, wait_1s
 
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
@@ -9,6 +9,13 @@ class SmartDrone(dronekit.Vehicle):
         self.dronename = "SmartDrone"
         # pass vehicle to get update of pixhawk controller
         self.smartmode = SmartMode(self)
+        self.last_mode = self.mode
+        self._current_mode = self.mode
+
+        @self.on_attribute('mode')
+        def _callback(self, _, message):
+            self.last_mode = self._current_mode
+            self._current_mode = message
 
     def start_main_control_loop(self):
         sd_logger.info("Start main control loop!")
@@ -17,7 +24,7 @@ class SmartDrone(dronekit.Vehicle):
             self.smartmode.run()
             self.check_mode_change()
             #TODO: update wait for a total time = 2s each loop
-            wait_5s()
+            wait_1s()
 
     def check_mode_change(self):
         """Not implemented. We need only 1 smart mode now.

@@ -12,3 +12,6 @@ def do_nothing():
 
 def wait_5s():
     time.sleep(5)
+
+def wait_1s():
+    time.sleep(1)
