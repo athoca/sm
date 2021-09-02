@@ -10,7 +10,7 @@ class PL_ManualControl(ModeState):
         super().__init__(*args)
         self.name = 'ManualControl'
     
-    def execute(self):
+    def _execute(self):
         """
         """
         sd_logger.debug("Executing manual control")
@@ -24,7 +24,7 @@ class PL_LandingPadSearch(ModeState):
         super().__init__(*args)
         self.name = 'LandingPadSearch'
 
-    def execute(self):
+    def _execute(self):
         """
         """
         sd_logger.debug("Executing landing pad search")
@@ -37,7 +37,7 @@ class PL_LandingPadGo(ModeState):
         super().__init__(*args)
         self.name = 'LandingPadGo'
 
-    def execute(self):
+    def _execute(self):
         """
         """
         sd_logger.debug("Executing landing pad go")
@@ -50,7 +50,7 @@ class PL_LandingPadLand(ModeState):
         super().__init__(*args)
         self.name = 'LandingPadLand'
 
-    def execute(self):
+    def _execute(self):
         """
         """
         sd_logger.debug("Executing landing pad land")
@@ -63,7 +63,7 @@ class PL_IRBeaconSearch(ModeState):
         super().__init__(*args)
         self.name = 'IRBeaconSearch'
 
-    def execute(self):
+    def _execute(self):
         """
         """
         sd_logger.debug("Executing IR beacon search")

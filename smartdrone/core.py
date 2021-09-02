@@ -69,21 +69,21 @@ class ModeState:
 
     def handle(self):
         sd_logger.info("Run state {} in smart mode {}".format(self.name, self.mode.name))
-        self.execute()
-        self.update_navigation()
-        self.update_doing()
+        self._execute()
+        self._update_navigation()
+        self._update_doing()
     
-    def execute(self):
+    def _execute(self):
         """From current status, compute next update of navigation or doing if needed.
         Not use a simple list of commands to facilitate complex algorithm.
         Standard execution should be less than 2s
         """
         sd_logger.debug("smart_algorithm")
 
-    def update_navigation(self):
+    def _update_navigation(self):
         sd_logger.debug("update_navigation")
 
-    def update_doing(self):
+    def _update_doing(self):
         # Change mode, Failsafe
         sd_logger.debug("update_doing")
     

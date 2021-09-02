@@ -46,12 +46,12 @@ class PLMode(SmartMode):
             
 
 class ArdupilotMode(SmartMode):
-    """Mode when smart algorithm do nothing. Drone in normal ardupilot modes.
+    """Mode controlled by ardupilot. Do nothing. Need no state. Drone work in normal ardupilot modes.
     """
     def __init__(self, *args):
         super().__init__(*args)
         self.name = 'ardupilot'
-        self._flag = False
+        self._flag = False # only display log once
 
     def precheck_mode_failsafe(self):
         if not self._flag:
