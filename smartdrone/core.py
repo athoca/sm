@@ -23,8 +23,6 @@ class SmartDrone(dronekit.Vehicle):
             self.smartmode.precheck_mode_failsafe()
             self.smartmode.run()
             self.check_mode_change()
-            #TODO: update wait for a total time = 2s each loop
-            wait_1s()
 
     def check_mode_change(self):
         """Not implemented. We need only 1 smart mode now.
@@ -69,7 +67,6 @@ class ModeState:
         self.vehicle = vehicle
         self.mode = mode
         self.name = name if name else 'noname_state'
-        self.last_mode = None
         self.reset()
 
     def reset(self):
@@ -80,7 +77,10 @@ class ModeState:
         self._execute()
         self._update_navigation()
         self._update_doing()
-        self._update_last_mode()
+        #TODO: update wait for a total time = 1-2s each loop
+        wait_1s() # wait here enable drone enough time to do updated command, especially change ardupilot modes if needed.
+        self._verify_complete_code()
+        
     
     def _execute(self):
         """From current status, compute next update of navigation or doing if needed.
@@ -96,11 +96,10 @@ class ModeState:
         # Change mode, Failsafe
         sd_logger.debug("update_doing")
 
-    def _update_last_mode(self):
-        if self.last_mode != self.vehicle.mode:
-            sd_logger.debug("update State last_mode from {} to {}".format(self.last_mode, self.vehicle.mode))
-            self.last_mode = self.vehicle.mode
-    
+    def _verify_complete_code(self):
+        # TODO: add complete code for change smartmode. Now only one smartmode.
+        sd_logger.debug("_verify_complete_code")
+
     def __eq__(self, name):
         if self.name==name:
             return True
