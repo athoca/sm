@@ -1,7 +1,9 @@
 """Use to declare all main Classes and Interface"""
 
 import dronekit
+import time
 from smartdrone.utils import sd_logger, wait_1s
+from smartdrone.utils import RFND
 
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
@@ -11,11 +13,17 @@ class SmartDrone(dronekit.Vehicle):
         self.smartmode = SmartMode(self)
         self.last_mode = self.mode
         self._current_mode = self.mode
+        self.rfnd = RFND()
 
         @self.on_attribute('mode')
         def _callback(self, _, message):
             self.last_mode = self._current_mode
             self._current_mode = message
+        
+        @self.on_message('RANGEFINDER')
+        def _callback(self, _, message):
+            self.rfnd.Dist = message.distance
+            self.rfnd.ts = message._timestamp
 
     def start_main_control_loop(self):
         sd_logger.info("Start main control loop!")
@@ -80,7 +88,7 @@ class ModeState:
 
     def handle(self):
         sd_logger.info("Run state {} in smart mode {}".format(self.name, self.mode.name))
-        self._execute()
+        self._compute_mission()
         self._update_navigation()
         self._update_doing()
         #TODO: update wait for a total time = 1-2s each loop
@@ -88,7 +96,7 @@ class ModeState:
         self._verify_complete_code()
         
     
-    def _execute(self):
+    def _compute_mission(self):
         """From current status, compute next update of navigation or doing if needed.
         Not use a simple list of commands to facilitate complex algorithm.
         Standard execution should be less than 2s

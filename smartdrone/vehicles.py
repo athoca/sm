@@ -1,7 +1,7 @@
 import dronekit
 from smartdrone.core import SmartDrone
 from smartdrone.modes import ArdupilotMode, PLMode
-from smartdrone.utils import sd_logger
+from smartdrone.utils import sd_logger, PLND
 
 class PLSmartDrone(SmartDrone):
     """Specific Smart Drone need specific mavlink info and fly controlling function.
@@ -10,7 +10,29 @@ class PLSmartDrone(SmartDrone):
         super(PLSmartDrone, self).__init__(*args)
         self.dronename = "PLSmartDrone"
         self.smartmode = PLMode(self)
+        # Create an Vehicle.plnd object with initial values set to None.
+        self.plnd = PLND()
+
+        @self.on_message('AHRS3')
+        def _callback(self, _, message):
+            self.plnd.pX = message.roll
+            self.plnd.pY = message.pitch
+            self.plnd.vX = message.yaw
+            self.plnd.vY = message.altitude
+            self.plnd.TAcq = message.lat
+            self.plnd.LastMeasMS = message.lng
+            self.plnd.ts = message._timestamp
+            # sd_logger.debug(message)
+    def rotate_gimbal_vertical(self, wait_ready=True):
+        """TODO: rotate, check pitch yaw, if not rerotate
+        """
+        pass
     
+    def rotate_gimbal_horizontal(self, wait_ready=True):
+        """TODO: rotate, check pitch yaw, if not rerotate
+        """
+        pass
+
     def check_mode_change(self):
         # TODO: update logic later. Now auto update to PLMode
         if isinstance(self.smartmode, ArdupilotMode):
