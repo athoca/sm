@@ -4,10 +4,12 @@ from dronekit import VehicleMode
 from smartdrone.modes import PLMode
 from smartdrone.states import PL_ManualControl, PL_LandingPadSearch, PL_LandingPadGo, PL_LandingPadLand, PL_IRBeaconSearch
 
+@pytest.mark.simulation
 def test_PLSmartDrone_Initialization(PLvehicle, plmode):
     assert PLvehicle.smartmode == 'precision_landing'
     assert PLvehicle.smartmode.state == 'ManualControl'
 
+@pytest.mark.simulation
 def test_ManualControl2LandingPadSearch(PLvehicle, plmode):
     state = PL_ManualControl(PLvehicle, plmode)
     assert state.complete_code == 0
@@ -18,6 +20,7 @@ def test_ManualControl2LandingPadSearch(PLvehicle, plmode):
     state._verify_complete_code()
     assert state.complete_code == 1
 
+@pytest.mark.simulation
 def test_ManualControlNot2LandingPadSearch(PLvehicle, plmode):
     state = PL_ManualControl(PLvehicle, plmode)
     assert state.complete_code == 0
@@ -28,6 +31,7 @@ def test_ManualControlNot2LandingPadSearch(PLvehicle, plmode):
     state._verify_complete_code()
     assert state.complete_code == 0
 
+@pytest.mark.simulation
 def test_LandingPadSearch2ManualControl(PLvehicle, plmode):
     PLvehicle.mode = VehicleMode('GUIDED')
     time.sleep(1)
@@ -38,6 +42,7 @@ def test_LandingPadSearch2ManualControl(PLvehicle, plmode):
     state._verify_complete_code()
     assert state.complete_code == 2
 
+@pytest.mark.simulation
 def test_LandingPadGo2ManualControl(PLvehicle, plmode):
     PLvehicle.mode = VehicleMode('GUIDED')
     time.sleep(1)
@@ -48,6 +53,7 @@ def test_LandingPadGo2ManualControl(PLvehicle, plmode):
     state._verify_complete_code()
     assert state.complete_code == 2
 
+@pytest.mark.simulation
 def test_LandingPadLand2ManualControl(PLvehicle, plmode):
     PLvehicle.mode = VehicleMode('GUIDED')
     time.sleep(1)
@@ -59,6 +65,7 @@ def test_LandingPadLand2ManualControl(PLvehicle, plmode):
     state._verify_complete_code()
     assert state.complete_code == 2
 
+@pytest.mark.simulation
 def test_IRBeaconSearch2ManualControl(PLvehicle, plmode):
     PLvehicle.mode = VehicleMode('LAND')
     time.sleep(1)
