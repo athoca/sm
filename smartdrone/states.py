@@ -38,7 +38,8 @@ class PL_LandingPadLand(ModeState):
         """ Correct yaw after approaching landing pad
         """
         sd_logger.info("Control yaw while let pixhark control land")
-        # if self.smartmode.rangefinder
+        # TODO: while h > H config to slow down => let land
+        # TODO: correct yaw at H slow down? (necessary?)
         do_nothing()
 
     def _update_navigation(self):
@@ -79,6 +80,10 @@ class PL_LandingPadSearch(ModeState):
     def _compute_mission(self):
         """Repeat wandering in a square area then detecting landing pad until detected.
         """
+        # TODO: if disarm => check armable and takeoff to H_search. Then start. If not armable => log then back Manual Mode
+        # TODO: if armed, if distance != H_search => go up to H_search then start.
+        # Get next position for wandering, goto, take 2 photo and detect, continue
+
         sd_logger.debug("Executing landing pad search")
         wait_1s()
     def _update_navigation(self):
@@ -102,6 +107,9 @@ class PL_LandingPadGo(ModeState):
     def _compute_mission(self):
         """ Follow three steps: Move, Approach, then Yaw
         """
+        # TODO: move to h2 on top, then detect again if not => search again
+        # TODO: approach to h1, do detection and combine target acquired
+        # TODO: yaw and check target acquired
         sd_logger.debug("Executing landing pad go")
     def _update_navigation(self):
         wait_1s()
@@ -126,6 +134,7 @@ class PL_IRBeaconSearch(ModeState):
         """ If above a configured level, switch to LandingPadSearch, if not fly up to the level and check.
         If target acquired, switching back LandingPadLand, else LandingPadSearch.
         """
+        # TODO: fly up to h1 in move on top when rotate yaw, if target acquired, yaw then to land, else search
         sd_logger.debug("Executing IR beacon search")
         wait_1s()
     def _update_navigation(self):

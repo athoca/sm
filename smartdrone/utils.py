@@ -30,7 +30,7 @@ class PLND(object):
     :param mY:	Target’s relative to origin position as 3-D Vector, Y-Axis
     :param mZ:	Target’s relative to origin position as 3-D Vector, Z-Axis
     """
-    def __init__(self, TAcq=None, LastMeasMS=None, pX=None, pY=None, vX=None, vY=None, ts=None):
+    def __init__(self, TAcq=None, LastMeasMS=None, pX=None, pY=None, vX=None, vY=None, H=None, ts=None):
         """
         PLND object constructor.
         """
@@ -41,12 +41,13 @@ class PLND(object):
         self.TAcq = TAcq
         self.LastMeasMS = LastMeasMS
         self.ts = ts
+        self.H = H
         
     def __str__(self):
         """
         String representation used to print the PLND object. 
         """
-        return "PLND: TAcq={},LastMeasMS={},pX={},pY={},vX={},vY={},ts={}".format(self.TAcq, self.LastMeasMS, self.pX,self.pY,self.vX,self.vY,self.ts)
+        return "PLND: TAcq={},LastMeasMS={},pX={},pY={},vX={},vY={},H={},ts={}".format(self.TAcq, self.LastMeasMS, self.pX,self.pY,self.vX,self.vY,self.H,self.ts)
 
 class RFND(object):
     """

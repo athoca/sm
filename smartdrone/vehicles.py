@@ -13,6 +13,11 @@ class PLSmartDrone(SmartDrone):
         # Create an Vehicle.plnd object with initial values set to None.
         self.plnd = PLND()
 
+        @self.on_message('RANGEFINDER')
+        def _callback(self, _, message):
+            self.plnd.H = message.distance
+            self.plnd.ts = message._timestamp
+            
         @self.on_message('AHRS3')
         def _callback(self, _, message):
             self.plnd.pX = message.roll
@@ -23,15 +28,18 @@ class PLSmartDrone(SmartDrone):
             self.plnd.LastMeasMS = message.lng
             self.plnd.ts = message._timestamp
             # sd_logger.debug(message)
-    def rotate_gimbal_vertical(self, wait_ready=True):
-        """TODO: rotate, check pitch yaw, if not rerotate
+
+        # TODO: attitude: rad
+
+    def rotate_gimbal_WE(self, wait_ready=True, timeout=1):
+        """TODO: rotate, check pitch yaw, if not rerotate until timeout
         """
-        pass
+        sd_logger.debug("rotate_gimbal_WE")
     
-    def rotate_gimbal_horizontal(self, wait_ready=True):
-        """TODO: rotate, check pitch yaw, if not rerotate
+    def rotate_gimbal_NS(self, wait_ready=True, timeout=1):
+        """TODO: rotate, check pitch yaw, if not rerotate until timeout
         """
-        pass
+        sd_logger.debug("rotate_gimbal_NS")
 
     def check_mode_change(self):
         # TODO: update logic later. Now auto update to PLMode

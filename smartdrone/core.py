@@ -3,7 +3,6 @@
 import dronekit
 import time
 from smartdrone.utils import sd_logger, wait_1s
-from smartdrone.utils import RFND
 
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
@@ -13,17 +12,11 @@ class SmartDrone(dronekit.Vehicle):
         self.smartmode = SmartMode(self)
         self.last_mode = self.mode
         self._current_mode = self.mode
-        self.rfnd = RFND()
 
         @self.on_attribute('mode')
         def _callback(self, _, message):
             self.last_mode = self._current_mode
             self._current_mode = message
-        
-        @self.on_message('RANGEFINDER')
-        def _callback(self, _, message):
-            self.rfnd.Dist = message.distance
-            self.rfnd.ts = message._timestamp
 
     def start_main_control_loop(self):
         sd_logger.info("Start main control loop!")
