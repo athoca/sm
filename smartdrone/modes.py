@@ -22,7 +22,7 @@ class PLMode(SmartMode):
 
         # TODO: check current mode change to LOITER => not overwrite by below.
         if complete_code:
-            sd_logger.debug("Complete code {}".format(complete_code))
+            self.state._logger("Complete code {}".format(complete_code))
             if complete_code == 2:
                 self.state = PL_ManualControl(self.vehicle, self)
             elif complete_code == 3:

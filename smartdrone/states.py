@@ -12,13 +12,13 @@ class PL_ManualControl(ModeState):
     def __init__(self, *args):
         super().__init__(*args)
         self.name = 'ManualControl'
-    
+
     def _compute_mission(self):
         """ Smart engine do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED
         """
-        sd_logger.info("Wait for switching state by change ardupilot mode from LOITER to GUIDED...")
+        self._logger("Wait for switching state by change ardupilot mode from LOITER to GUIDED...")
         #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
-        sd_logger.info("setting throttle channel to 1500 via channel overrides")
+        self._logger("setting throttle channel to 1500 via channel overrides")
         self.vehicle.channels.overrides['3'] = 1500
         wait_1s() # time to received mavlink mode update
 
@@ -78,7 +78,7 @@ class PL_LandingPadSearch(ModeState):
         if self._navigation:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self.target_location['loc'])
-            sd_logger.debug("Distance to the target location: {}".format(dist))
+            self._logger("Distance to the target location: {}".format(dist))
             if dist < self.error_threshold:
                 self._navigation = False
                 self._doing = True
@@ -89,24 +89,24 @@ class PL_LandingPadSearch(ModeState):
     def _update_navigation(self):
         if self._navigation:
             if not self.from_ground:
-                sd_logger.debug("Waiting for GO TO target location {}".format(self.target_location))
+                self._logger("Waiting for GO TO target location {}".format(self.target_location['idx']))
                 self.vehicle.simple_goto(self.target_location['loc'])    
             else:
                 if not self.vehicle.is_armable:
-                    sd_logger.debug(" Waiting for vehicle armable to initialise...")
+                    self._logger(" Waiting for vehicle armable to initialise...")
                     return
                 else:
                     if not self.vehicle.armed:
-                        sd_logger.debug("Waiting for arming motors")
+                        self._logger("Waiting for arming motors")
                         self.vehicle.armed = True
                         return
-                sd_logger.debug("Waiting for TAKE OFF to target altitude {} m".format(self.target_altitude))
-                sd_logger.debug(" Altitude: {}".format(self.vehicle.location.global_relative_frame.alt))
+                self._logger("Waiting for TAKE OFF to target altitude {} m".format(self.target_altitude))
+                self._logger(" Altitude: {}".format(self.vehicle.location.global_relative_frame.alt))
                 self.vehicle.simple_takeoff(self.target_altitude) # Take off to target altitude
 
     def _update_doing(self):
         if self._doing:
-            sd_logger.debug("Waiting for doing detection")
+            self._logger("Waiting for doing detection")
             self._do_detection()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             self._navigation = True
@@ -158,7 +158,7 @@ class PL_LandingPadGo(ModeState):
         if self._move_on_h2:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self._target_location_h2)
-            sd_logger.debug("Distance to the h2 target location: {}".format(dist))
+            self._logger("Distance to the h2 target location: {}".format(dist))
             if dist < self.error_threshold:
                 self._move_on_h2 = False
                 self._doing_on_h2 = True
@@ -167,7 +167,7 @@ class PL_LandingPadGo(ModeState):
         if self._move_on_h1:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self._target_location_h1)
-            sd_logger.debug("Distance to the h1 target location: {}".format(dist))
+            self._logger("Distance to the h1 target location: {}".format(dist))
             if dist < self.error_threshold:
                 self._move_on_h1 = False
                 self._doing_on_h1 = True
@@ -181,11 +181,11 @@ class PL_LandingPadGo(ModeState):
 
     def _update_navigation(self):
         if self._move_on_h2:
-            sd_logger.debug("Waiting for GO TO H2 target location {}".format(self._target_location_h2))
+            self._logger("Waiting for GO TO H2 target location {}".format(self._target_location_h2))
             self.vehicle.simple_goto(self._target_location_h2)
             return
         if self._move_on_h1:
-            sd_logger.debug("Waiting for GO TO H1 target location {}".format(self._target_location_h1))
+            self._logger("Waiting for GO TO H1 target location {}".format(self._target_location_h1))
             self.vehicle.simple_goto(self._target_location_h1)
             return
         if self._is_yawing:
@@ -194,7 +194,7 @@ class PL_LandingPadGo(ModeState):
 
     def _update_doing(self):
         if self._doing_on_h2:
-            sd_logger.debug("Waiting for doing detection on H2")
+            self._logger("Waiting for doing detection on H2")
             self._do_detection()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             if not self._is_detected:
@@ -207,7 +207,7 @@ class PL_LandingPadGo(ModeState):
             return
 
         if self._doing_on_h1:
-            sd_logger.debug("Waiting for doing detection on H1")
+            self._logger("Waiting for doing detection on H1")
             self._do_detection()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             if not self._is_detected:
@@ -253,7 +253,7 @@ class PL_LandingPadLand(ModeState):
     def _compute_mission(self):
         """ Correct yaw after approaching landing pad
         """
-        sd_logger.info("Control yaw while let pixhark control land")
+        self._logger("Control yaw while let pixhark control land")
         # TODO: while h > H config to slow down => let land
         # TODO: correct yaw at H slow down? (necessary?)
         do_nothing()
@@ -302,7 +302,7 @@ class PL_IRBeaconSearch(ModeState):
         If target acquired, switching back LandingPadLand, else LandingPadSearch.
         """
         # TODO: fly up to h1 in move on top when rotate yaw, if target acquired, yaw then to land, else search
-        sd_logger.debug("Executing IR beacon search")
+        self._logger("Executing IR beacon search")
         wait_1s()
     def _update_navigation(self):
         wait_1s()

@@ -46,14 +46,13 @@ class SmartMode:
         """Check if drone status is ready to run the mode. Mode ready means all state ready.
         """
         if True:
-            sd_logger.info("----------------------------------")
-            sd_logger.info("NOT IMPLEMENTED. Drone status, prechecked failsafe for mode {}".format(self.name))
+            # sd_logger.info("[{}]NOT IMPLEMENTED failsafe check".format(self.name))
+            self.state._logger("NOT IMPLEMENTED failsafe check")
         else:
             sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
             sd_logger.info("Back to AltHold mode")
 
     def run(self):
-        sd_logger.info("Run smart mode {}".format(self.name))
         self.state.handle()
         self.check_current_state_complete()
 
@@ -80,7 +79,6 @@ class ModeState:
         self.complete_code = 0
 
     def handle(self):
-        sd_logger.info("Run state {} in smart mode {}".format(self.name, self.mode.name))
         self._compute_mission()
         self._update_navigation()
         self._update_doing()
@@ -112,3 +110,6 @@ class ModeState:
             return True
         else:
             return False
+    
+    def _logger(self, message):
+        sd_logger.info("[{}][{}] ".format(self.mode.name, self.name) + message)
