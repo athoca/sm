@@ -1,6 +1,6 @@
 import pytest
 import time
-from dronekit import VehicleMode
+from dronekit import VehicleMode, LocationGlobalRelative
 from smartdrone.modes import PLMode
 from smartdrone.states import PL_ManualControl, PL_LandingPadSearch, PL_LandingPadGo, PL_LandingPadLand, PL_IRBeaconSearch
 
@@ -46,7 +46,7 @@ def test_LandingPadSearch2ManualControl(PLvehicle, plmode):
 def test_LandingPadGo2ManualControl(PLvehicle, plmode):
     PLvehicle.mode = VehicleMode('GUIDED')
     time.sleep(1)
-    state = PL_LandingPadGo(PLvehicle, plmode)
+    state = PL_LandingPadGo(LocationGlobalRelative(None,None), PLvehicle, plmode)
     assert state.complete_code == 0
     PLvehicle.mode = VehicleMode('LOITER')
     time.sleep(1)
