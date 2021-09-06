@@ -31,7 +31,7 @@ class PLMode(SmartMode):
                 if self.state == 'ManualControl': 
                     self.state = PL_LandingPadSearch(self.vehicle, self)
                 elif self.state == 'LandingPadSearch': 
-                    self.state = PL_LandingPadGo(self.vehicle, self)
+                    self.state = PL_LandingPadGo(self.state.detected_target, self.vehicle, self)
                 elif self.state == 'LandingPadGo': 
                     self.state = PL_LandingPadLand(self.vehicle, self)
                 elif self.state == 'LandingPadLand': 

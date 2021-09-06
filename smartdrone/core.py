@@ -112,13 +112,3 @@ class ModeState:
             return True
         else:
             return False
-
-
-
-
-
-def func(x):
-    return x + 1
-
-def raise_exception():
-    raise SystemExit(1)
