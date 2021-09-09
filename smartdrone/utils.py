@@ -20,6 +20,20 @@ def wait_5s():
 def wait_1s():
     time.sleep(1)
 
+def wait_0_5s():
+    time.sleep(0.5)
+
+def rad2degree(rad):
+    # convert range -pi to pi to range 180 - 360=0 - 180
+    if rad < 0:
+        rad = 2*math.pi + rad
+    return rad/math.pi*180
+
+def degree2degree(degree):
+    # convert any degree (even <0 or >360) to range 180 - 360=0 - 180
+    return degree % 360 
+    
+
 class PLND(object):
     """
     The PLND from mavlink message.

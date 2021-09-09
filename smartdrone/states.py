@@ -1,8 +1,9 @@
 from logging import error
 from os import name
+from re import search
 from smartdrone.core import ModeState
-from smartdrone.utils import sd_logger, wait_1s, do_nothing, get_distance_metres, get_location_metres
-from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config
+from smartdrone.utils import sd_logger, wait_1s, wait_5s, do_nothing, get_distance_metres, get_location_metres, rad2degree
+from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
 import random
 import time
 from dronekit import VehicleMode
@@ -12,15 +13,22 @@ class PL_ManualControl(ModeState):
     def __init__(self, *args):
         super().__init__(*args)
         self.name = 'ManualControl'
+        self._last_override_time = time.time()
 
     def _compute_mission(self):
         """ Smart engine do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED
         """
         self._logger("Wait for switching state by change ardupilot mode from LOITER to GUIDED...")
+        # TODO: test setup gimbal at the beginin.
+        self.vehicle.gimbal.rotate(43, 0, 0)
+
         #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
         self._logger("setting throttle channel to 1500 via channel overrides")
         self.vehicle.channels.overrides['3'] = 1500
+        self._logger("from last time: {}".format(time.time() - self._last_override_time))
+        self._last_override_time = time.time()
         wait_1s() # time to received mavlink mode update
+        time.sleep(0.5) # temporary add to reduce frequence of overriding.
 
     def _update_navigation(self):
         do_nothing()
@@ -124,7 +132,8 @@ class PL_LandingPadSearch(ModeState):
         # TODO: implement logic + set target position from detection (for next state)
         self._is_detected = random.choice([0,1,1])
         current_location = self.vehicle.location.global_relative_frame
-        self.detected_target = LocationGlobalRelative(current_location.lat, current_location.lon, 0)
+        home_location = self.vehicle.home_location # not Relative but absolut location.
+        self.detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
         wait_1s()
 
 
@@ -148,7 +157,7 @@ class PL_LandingPadGo(ModeState):
         self._doing_on_h2 = False
         self._move_on_h1 = False
         self._doing_on_h1 = False
-        self._is_yawing = False
+        self._is_yawing = False # first time yaw
         self._precheck_land = False
 
     def _compute_mission(self):
@@ -174,8 +183,10 @@ class PL_LandingPadGo(ModeState):
             return
         # Yawing and check target acquired, if not => search again
         if self._is_yawing:
-            # TODO: check self._target_yaw - current yaw < error, if ok => precheck_land()
-            if True:
+            current_yaw = rad2degree(self.vehicle.attitude.yaw)
+            if abs(current_yaw - self._target_yaw) < 1: # in degree
+                # TODO: in case of 0 degree, the current yaw oscilate 0 and 360.
+                # TODO: check self._target_yaw - current yaw < error, if ok => precheck_land()
                 self._is_yawing = False
                 self._precheck_land = True
 
@@ -190,7 +201,8 @@ class PL_LandingPadGo(ModeState):
             return
         if self._is_yawing:
             # TODO: send request yawing!
-            pass
+            self.vehicle.condition_yaw(self._target_yaw)
+            
 
     def _update_doing(self):
         if self._doing_on_h2:
@@ -217,11 +229,14 @@ class PL_LandingPadGo(ModeState):
                 self._is_yawing = True
                 # TODO: update _target_yaw based on detection result.
                 # self._target_yaw = self.detected_yaw
+                self._target_yaw = 120
             return
 
         if self._precheck_land:
             # TODO: check if target acquired => set _target_acquired, else set _lost_target. End sequence of steps.
-            self.complete_code = random.choice([1,1,1,1,1,1,1,3])
+            # self.complete_code = random.choice([1,1,1,1,1,1,1,3]) # for simulation test
+            self._target_acquired = True
+
 
     def _verify_complete_code(self):
         if self.vehicle.mode != VehicleMode('GUIDED'):
@@ -248,35 +263,65 @@ class PL_LandingPadLand(ModeState):
     def __init__(self, *args):
         super().__init__(*args)
         self.name = 'LandingPadLand'
+        self.H = LandingPadLand_Config.H_YAW
+        self._target_acquired = True
+        # sequence of 3 steps of the state:
+        self._descending = True         # descend
+        self._doing_on_H = False    # detect yaw
+        self._is_yawing = False     # second time yaw
         self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
 
     def _compute_mission(self):
         """ Correct yaw after approaching landing pad
         """
-        self._logger("Control yaw while let pixhark control land")
-        # TODO: while h > H config to slow down => let land
-        # TODO: correct yaw at H slow down? (necessary?)
-        do_nothing()
-        wait_1s()
+        if self._descending:
+            self._logger("Descend to H yaw")
+            current_location = self.vehicle.location.global_relative_frame
+            if current_location.alt < self.H:
+                    self._doing_on_H = True
+                    self._descending = False
+                    self._set_vehicle_guided_mode(wait_ready=True, wait_time=2)
+            return
+
+        if self._is_yawing:
+            self._logger("Yawing")
+            current_yaw = rad2degree(self.vehicle.attitude.yaw)
+            if abs(current_yaw - self._target_yaw) < 1: # in degree
+            # TODO: check self._target_yaw - current yaw < error, if ok => check target acquired
+                self._is_yawing = False
+                self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
 
     def _update_navigation(self):
-        do_nothing()
+        if self._is_yawing:
+            # TODO: send request yawing!
+            self.vehicle.condition_yaw(self._target_yaw)
 
     def _update_doing(self):
-        do_nothing()
+        if self._doing_on_H:
+            self._logger("Waiting for doing yaw detection on H")
+            self._detect_yaw()
+            #TODO future: for simplicity, do command is return done immediately. Update if needed later.
+            self._doing_on_H = False
+            self._is_yawing = True
+            # TODO: update _target_yaw based on detection result.
+            # self._target_yaw = self.detected_yaw
+            self._target_yaw = 300
+            return
 
     def _verify_complete_code(self):
-        if self.vehicle.mode != VehicleMode('LAND'):
+        if self.vehicle.mode not in [VehicleMode('LAND'),VehicleMode('GUIDED')]:
                 self.complete_code = 2
                 return
         else:
-            if not self.vehicle.armed:
+            if not self.vehicle.armed: # succesful landing.
+                self._logger("Precision Landing FINISHED!")
                 self.complete_code = 2
                 return
-            # TODO: if disarm (landed successful) => complete_code = 2 + notification. Testable
-            # TODO: if target acquired lost for > 2000ms => code = 1, IRBeaconSearch. Testable.
-            self.complete_code = random.choice([0,0,0,0,0,0,0,1])
-            return
+            # TODO: if target acquired lost for > 2000ms => code = 1, 
+            # Now assumpt that precision landing sucessfully, _target_acquired always True => never IRBeaconSearch
+            if not self._target_acquired:
+                self.complete_code = 1
+                return    
 
     def _set_vehicle_land_mode(self, wait_ready=False, wait_time=2):
         """To make sure set mode have enough time to be done, before verify_complete_code run"""
@@ -289,19 +334,38 @@ class PL_LandingPadLand(ModeState):
                 time.sleep(0.2) # wait time for set mode done
         else:
             self.vehicle.mode = VehicleMode('LAND')
+    
+    def _set_vehicle_guided_mode(self, wait_ready=False, wait_time=2):
+        """To make sure set mode have enough time to be done, before verify_complete_code run"""
+        if wait_ready:
+            self.vehicle.mode = VehicleMode('GUIDED')
+            time.sleep(0.2) # wait time for set mode done
+            start = time.time()
+            while self.vehicle.mode != VehicleMode('GUIDED') or time.time()-start<wait_time:
+                self.vehicle.mode = VehicleMode('GUIDED')
+                time.sleep(0.2) # wait time for set mode done
+        else:
+            self.vehicle.mode = VehicleMode('GUIDED')
+    
+    def _detect_yaw(self):
+        # TODO: update detected_yaw based on detection result.
+        wait_1s()
 
 class PL_IRBeaconSearch(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadLand, 2 => back: ManualControl, 3 => LandingPadSearch
     def __init__(self, *args):
         super().__init__(*args)
         self.name = 'IRBeaconSearch'
+        self.h1 = LandingPadGo_Config.H1
         self._set_vehicle_guided_mode(wait_ready=True, wait_time=2)
 
     def _compute_mission(self):
         """ If above a configured level, switch to LandingPadSearch, if not fly up to the level and check.
         If target acquired, switching back LandingPadLand, else LandingPadSearch.
         """
+        # tam thoi hoan thien nhung co the ko can dung state nay
         # TODO: fly up to h1 in move on top when rotate yaw, if target acquired, yaw then to land, else search
+        # flyup h1, check target acquired, if yes => LAND, not => Search
         self._logger("Executing IR beacon search")
         wait_1s()
     def _update_navigation(self):
@@ -329,7 +393,3 @@ class PL_IRBeaconSearch(ModeState):
         else:
             self.vehicle.mode = VehicleMode('GUIDED')
 
-
-
-
-    
