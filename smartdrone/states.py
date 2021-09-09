@@ -20,7 +20,7 @@ class PL_ManualControl(ModeState):
         """
         self._logger("Wait for switching state by change ardupilot mode from LOITER to GUIDED...")
         # TODO: test setup gimbal at the beginin.
-        self.vehicle.gimbal.rotate(43, 0, 0)
+        self.vehicle.gimbal.rotate(-40, 0, 30)
 
         #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
         self._logger("setting throttle channel to 1500 via channel overrides")
