@@ -6,7 +6,7 @@ from smartdrone.states import PL_ManualControl, PL_LandingPadSearch, PL_LandingP
 
 @pytest.mark.simulation
 def test_PLSmartDrone_Initialization(PLvehicle, plmode):
-    assert PLvehicle.smartmode == 'precision_landing'
+    assert PLvehicle.smartmode == 'PL'
     assert PLvehicle.smartmode.state == 'ManualControl'
 
 @pytest.mark.simulation
