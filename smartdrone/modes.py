@@ -7,7 +7,7 @@ class PLMode(SmartMode):
     """
     def __init__(self, *args):
         super(PLMode, self).__init__(*args)
-        self.name = 'precision_landing'
+        self.name = 'PL' # precision_landing
         self.state = PL_ManualControl(self.vehicle, self)
     
     def check_current_state_complete(self):

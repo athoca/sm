@@ -1,6 +1,6 @@
 import math
 import logging
-sd_logger = logging.getLogger('smartdrone')
+sd_logger = logging.getLogger('sm') # smartdrone
 log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 file_handler = logging.FileHandler('smartdrone.log')
 file_handler.setFormatter(log_formatter)
@@ -32,7 +32,7 @@ def rad2degree(rad):
 def degree2degree(degree):
     # convert any degree (even <0 or >360) to range 180 - 360=0 - 180
     return degree % 360 
-    
+
 
 class PLND(object):
     """
