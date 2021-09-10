@@ -90,6 +90,7 @@ class SmartMode:
             #     format(MODE, PLND_ANGLE_MAX, WPNAV_ANGLE_MAX, ANGLE_MAX, PLND_TACQ_DURATION, PLND_YAW_ALIGN))
             sd_logger.info("Mode: {} :: PLND_AM: {} :: WPNAV_AM: {} :: AM: {} :: Tacq: {}ms :: YawAlign :: {}".\
                 format(MODE, PLND_ANGLE_MAX, WPNAV_ANGLE_MAX, ANGLE_MAX, PLND_TACQ_DURATION, PLND_YAW_ALIGN))
+            sd_logger.info(self.vehicle.battery)
             sd_logger.info(self.vehicle.channels)
             sd_logger.info(self.vehicle.plnd)
 
