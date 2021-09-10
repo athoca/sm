@@ -63,7 +63,8 @@ class PL_LandingPadSearch(ModeState):
         super().reset()
 
     def _is_from_ground(self):
-        return (not self.vehicle.armed) or (self._original_location.alt < 0.7)
+        # return (not self.vehicle.armed) or (self._original_location.alt < 0.7)
+        return (not self.vehicle.armed) or (self.vehicle.get_height() < 0.2)
 
     def _update_target_location(self, square_size=10, nb_squares=1):
         # TODO future: increase square_size after a long time.
@@ -109,7 +110,8 @@ class PL_LandingPadSearch(ModeState):
                         self.vehicle.armed = True
                         return
                 self._logger("Waiting for TAKE OFF to target altitude {} m".format(self.target_altitude))
-                self._logger(" Altitude: {}".format(self.vehicle.location.global_relative_frame.alt))
+                # self._logger(" Altitude: {}".format(self.vehicle.location.global_relative_frame.alt))
+                self._logger(" Altitude: {}".format(self.vehicle.get_height()))
                 self.vehicle.simple_takeoff(self.target_altitude) # Take off to target altitude
 
     def _update_doing(self):
@@ -276,11 +278,12 @@ class PL_LandingPadLand(ModeState):
         """
         if self._descending:
             self._logger("Descend to H yaw")
-            current_location = self.vehicle.location.global_relative_frame
-            if current_location.alt < self.H:
-                    self._doing_on_H = True
-                    self._descending = False
-                    self._set_vehicle_guided_mode(wait_ready=True, wait_time=2)
+            # current_location = self.vehicle.location.global_relative_frame
+            # if current_location.alt < self.H:
+            if self.vehicle.get_height() < self.H:
+                self._doing_on_H = True
+                self._descending = False
+                self._set_vehicle_guided_mode(wait_ready=True, wait_time=2)
             return
 
         if self._is_yawing:

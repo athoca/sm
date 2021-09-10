@@ -30,6 +30,11 @@ class PLSmartDrone(SmartDrone):
             # sd_logger.debug(message)
 
         # TODO: attitude: rad
+    def get_height(self):
+        if self.plnd.H is not None:
+            return self.plnd.H
+        else:
+            return self.location.global_relative_frame.alt
 
     def rotate_gimbal_WE(self, wait_ready=True, timeout=1):
         """TODO: rotate, check pitch yaw, if not rerotate until timeout
