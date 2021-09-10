@@ -130,7 +130,7 @@ class PL_LandingPadSearch(ModeState):
     def _do_detection(self):
         # TODO: implement logic + set target position from detection (for next state)
         wait_1s()
-        self._is_detected = random.choice([0,1,1])
+        self._is_detected = random.choice([0,1])
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
         self.detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
