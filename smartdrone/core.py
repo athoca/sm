@@ -79,7 +79,18 @@ class SmartMode:
         """
         if True:
             # sd_logger.info("[{}]NOT IMPLEMENTED failsafe check".format(self.name))
-            self.state._logger("NOT IMPLEMENTED failsafe check")
+            self.state._logger("-------------------------------------- NOT IMPLEMENTED failsafe check")
+            MODE = self.vehicle.mode
+            PLND_ANGLE_MAX = self.vehicle.parameters['PLND_ANGLE_MAX']
+            PLND_TACQ_DURATION = self.vehicle.parameters['PLND_TAR_ACQUIRE']
+            PLND_YAW_ALIGN = self.vehicle.parameters['PLND_YAW_ALIGN']
+            WPNAV_ANGLE_MAX = self.vehicle.parameters['WPNAV_ANGLE_MAX']
+            ANGLE_MAX = self.vehicle.parameters['ANGLE_MAX']
+            self.state._logger("Mode: {} :: PLND_AM: {} :: WPNAV_AM: {} :: AM: {} :: Tacq: {}ms :: YawAlign :: {}".\
+                format(MODE, PLND_ANGLE_MAX, WPNAV_ANGLE_MAX, ANGLE_MAX, PLND_TACQ_DURATION, PLND_YAW_ALIGN))
+            sd_logger.info(self.vehicle.channels)
+            sd_logger.info(self.vehicle.plnd)
+
         else:
             sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
             sd_logger.info("Back to AltHold mode")
