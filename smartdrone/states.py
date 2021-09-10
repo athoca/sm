@@ -21,7 +21,7 @@ class PL_ManualControl(ModeState):
         self._logger("Wait mode change from LOITER to GUIDED...")
         # TODO: test setup gimbal at the begin.
         self._logger("Rotate GIMBAL to default.")
-        self.vehicle.gimbal.rotate(-40, 0, 30)
+        self.vehicle.gimbal.rotate(-40, 0, 240)
 
         #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
         self._logger("Set throttle to 1500 via channel overrides. Last time: {}".format(time.time() - self._last_override_time))
