@@ -2,7 +2,7 @@ from logging import error
 from os import name
 from re import search
 from smartdrone.core import ModeState
-from smartdrone.utils import sd_logger, wait_1s, wait_5s, do_nothing, get_distance_metres, get_location_metres, rad2degree
+from smartdrone.utils import sd_logger, wait_0_5s, wait_1s, wait_5s, do_nothing, get_distance_metres, get_location_metres, rad2degree
 from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
 import random
 import time
@@ -18,16 +18,16 @@ class PL_ManualControl(ModeState):
     def _compute_mission(self):
         """ Smart engine do nothing, waiting for switching state by change ardupilot mode from LOITER to GUIDED
         """
-        self._logger("Wait for switching state by change ardupilot mode from LOITER to GUIDED...")
-        # TODO: test setup gimbal at the beginin.
+        self._logger("Wait mode change from LOITER to GUIDED...")
+        # TODO: test setup gimbal at the begin.
+        self._logger("Rotate GIMBAL to default.")
         self.vehicle.gimbal.rotate(-40, 0, 30)
 
         #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
-        self._logger("setting throttle channel to 1500 via channel overrides")
+        self._logger("Set throttle to 1500 via channel overrides. Last time: {}".format(time.time() - self._last_override_time))
         self.vehicle.channels.overrides['3'] = 1500
-        self._logger("from last time: {}".format(time.time() - self._last_override_time))
         self._last_override_time = time.time()
-        wait_1s() # time to received mavlink mode update
+        wait_1s() # time to received mavlink mode update, it's safe to be slow here.
         time.sleep(0.5) # temporary add to reduce frequence of overriding.
 
     def _update_navigation(self):
@@ -59,14 +59,11 @@ class PL_LandingPadSearch(ModeState):
         self._navigation = True
         self._doing = False
 
-    def reset(self):
-        super().reset()
-
     def _is_from_ground(self):
         # return (not self.vehicle.armed) or (self._original_location.alt < 0.7)
         return (not self.vehicle.armed) or (self.vehicle.get_height() < 0.2)
 
-    def _update_target_location(self, square_size=10, nb_squares=1):
+    def _update_target_location(self, square_size=8, nb_squares=1):
         # TODO future: increase square_size after a long time.
         # TODO: update square_size and nb_squares from config
         current_i = self.target_location['idx'][0]
@@ -87,7 +84,7 @@ class PL_LandingPadSearch(ModeState):
         if self._navigation:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self.target_location['loc'])
-            self._logger("Distance to the target location: {}".format(dist))
+            self._logger("Distance to target location: {}".format(dist))
             if dist < self.error_threshold:
                 self._navigation = False
                 self._doing = True
@@ -98,7 +95,7 @@ class PL_LandingPadSearch(ModeState):
     def _update_navigation(self):
         if self._navigation:
             if not self.from_ground:
-                self._logger("Waiting for GO TO target location {}".format(self.target_location['idx']))
+                self._logger("GOING TO target location {}".format(self.target_location['idx']))
                 self.vehicle.simple_goto(self.target_location['loc'])    
             else:
                 if not self.vehicle.is_armable:
@@ -109,14 +106,14 @@ class PL_LandingPadSearch(ModeState):
                         self._logger("Waiting for arming motors")
                         self.vehicle.armed = True
                         return
-                self._logger("Waiting for TAKE OFF to target altitude {} m".format(self.target_altitude))
+                self._logger("TAKING OFF to target altitude {} m".format(self.target_altitude))
                 # self._logger(" Altitude: {}".format(self.vehicle.location.global_relative_frame.alt))
-                self._logger(" Altitude: {}".format(self.vehicle.get_height()))
+                self._logger("Altitude: {}".format(self.vehicle.get_height()))
                 self.vehicle.simple_takeoff(self.target_altitude) # Take off to target altitude
 
     def _update_doing(self):
         if self._doing:
-            self._logger("Waiting for doing detection")
+            self._logger("DOING DETECTION")
             self._do_detection()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             self._navigation = True
@@ -132,11 +129,12 @@ class PL_LandingPadSearch(ModeState):
     
     def _do_detection(self):
         # TODO: implement logic + set target position from detection (for next state)
+        wait_1s()
         self._is_detected = random.choice([0,1,1])
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
         self.detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
-        wait_1s()
+        
 
 
 class PL_LandingPadGo(ModeState):
@@ -169,7 +167,7 @@ class PL_LandingPadGo(ModeState):
         if self._move_on_h2:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self._target_location_h2)
-            self._logger("Distance to the h2 target location: {}".format(dist))
+            self._logger("Distance to the H2 TARGET LOCATION: {}".format(dist))
             if dist < self.error_threshold:
                 self._move_on_h2 = False
                 self._doing_on_h2 = True
@@ -178,7 +176,7 @@ class PL_LandingPadGo(ModeState):
         if self._move_on_h1:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self._target_location_h1)
-            self._logger("Distance to the h1 target location: {}".format(dist))
+            self._logger("Distance to the H1 TARGET LOCATION: {}".format(dist))
             if dist < self.error_threshold:
                 self._move_on_h1 = False
                 self._doing_on_h1 = True
@@ -186,7 +184,9 @@ class PL_LandingPadGo(ModeState):
         # Yawing and check target acquired, if not => search again
         if self._is_yawing:
             current_yaw = rad2degree(self.vehicle.attitude.yaw)
-            if abs(current_yaw - self._target_yaw) < 1: # in degree
+            dist = abs(current_yaw - self._target_yaw)
+            self._logger("Distance to CORRECT YAW: {}".format(dist))
+            if dist < 5: # in degree
                 # TODO: in case of 0 degree, the current yaw oscilate 0 and 360.
                 # TODO: check self._target_yaw - current yaw < error, if ok => precheck_land()
                 self._is_yawing = False
@@ -194,21 +194,22 @@ class PL_LandingPadGo(ModeState):
 
     def _update_navigation(self):
         if self._move_on_h2:
-            self._logger("Waiting for GO TO H2 target location {}".format(self._target_location_h2))
+            self._logger("GOING TO H2 target location {}".format(self._target_location_h2))
             self.vehicle.simple_goto(self._target_location_h2)
             return
         if self._move_on_h1:
-            self._logger("Waiting for GO TO H1 target location {}".format(self._target_location_h1))
+            self._logger("GOING TO H1 target location {}".format(self._target_location_h1))
             self.vehicle.simple_goto(self._target_location_h1)
             return
         if self._is_yawing:
+            self._logger("YAWING to absolute target {}".format(self._target_yaw))
             # TODO: send request yawing!
             self.vehicle.condition_yaw(self._target_yaw)
             
 
     def _update_doing(self):
         if self._doing_on_h2:
-            self._logger("Waiting for doing detection on H2")
+            self._logger("DOING DETECTION ON H2")
             self._do_detection()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             if not self._is_detected:
@@ -221,7 +222,7 @@ class PL_LandingPadGo(ModeState):
             return
 
         if self._doing_on_h1:
-            self._logger("Waiting for doing detection on H1")
+            self._logger("DOING DETECTION ON H1")
             self._do_detection()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             if not self._is_detected:
@@ -235,6 +236,8 @@ class PL_LandingPadGo(ModeState):
             return
 
         if self._precheck_land:
+            self._logger("CHECK TARGET ACQUIRED ON H1")
+            wait_0_5s()
             # TODO: check if target acquired => set _target_acquired, else set _lost_target. End sequence of steps.
             # self.complete_code = random.choice([1,1,1,1,1,1,1,3]) # for simulation test
             self._target_acquired = True
@@ -252,12 +255,13 @@ class PL_LandingPadGo(ModeState):
             return
     
     def _do_detection(self):
+        wait_1s()
         self._is_detected = random.choice([0,1,1,1])
         if not self._is_detected: # retry
             self._is_detected = random.choice([0,1,1,1])
         # TODO: update detected_target based on detection result.
         # TODO: update detected_yaw based on detection result.
-        wait_1s()
+        
 
 
 class PL_LandingPadLand(ModeState):
@@ -277,31 +281,32 @@ class PL_LandingPadLand(ModeState):
         """ Correct yaw after approaching landing pad
         """
         if self._descending:
-            self._logger("Descend to H yaw")
-            # current_location = self.vehicle.location.global_relative_frame
-            # if current_location.alt < self.H:
-            if self.vehicle.get_height() < self.H:
+            dist = self.vehicle.get_height() - self.H
+            self._logger("DESCEND in LAND to {}m, Distance = {}".format(self.H, dist))
+            if dist < 0.3:
                 self._doing_on_H = True
                 self._descending = False
                 self._set_vehicle_guided_mode(wait_ready=True, wait_time=2)
             return
 
         if self._is_yawing:
-            self._logger("Yawing")
             current_yaw = rad2degree(self.vehicle.attitude.yaw)
-            if abs(current_yaw - self._target_yaw) < 1: # in degree
+            dist = abs(current_yaw - self._target_yaw)
+            self._logger("Distance to CORRECT YAW: {}".format(dist))
+            if dist < 5: # in degree
             # TODO: check self._target_yaw - current yaw < error, if ok => check target acquired
                 self._is_yawing = False
                 self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
 
     def _update_navigation(self):
         if self._is_yawing:
+            self._logger("YAWING to absolute target {}".format(self._target_yaw))
             # TODO: send request yawing!
             self.vehicle.condition_yaw(self._target_yaw)
 
     def _update_doing(self):
         if self._doing_on_H:
-            self._logger("Waiting for doing yaw detection on H")
+            self._logger("DOING DETECTION YAW")
             self._detect_yaw()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             self._doing_on_H = False
@@ -317,7 +322,7 @@ class PL_LandingPadLand(ModeState):
                 return
         else:
             if not self.vehicle.armed: # succesful landing.
-                self._logger("Precision Landing FINISHED!")
+                self._logger("***************************FINISHED!")
                 self.complete_code = 2
                 return
             # TODO: if target acquired lost for > 2000ms => code = 1, 
@@ -352,7 +357,7 @@ class PL_LandingPadLand(ModeState):
     
     def _detect_yaw(self):
         # TODO: update detected_yaw based on detection result.
-        wait_1s()
+        wait_0_5s()
 
 class PL_IRBeaconSearch(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadLand, 2 => back: ManualControl, 3 => LandingPadSearch

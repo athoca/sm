@@ -8,7 +8,7 @@ from smartdrone.utils import sd_logger, wait_1s
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
         super(SmartDrone, self).__init__(*args) # temporary remove to build the framework
-        self.dronename = "SmartDrone"
+        self.dronename = "SmartDrone" # SmartDrone
         # pass vehicle to get update of pixhawk controller
         self.smartmode = SmartMode(self)
         self.last_mode = self.mode
@@ -80,13 +80,15 @@ class SmartMode:
         if True:
             # sd_logger.info("[{}]NOT IMPLEMENTED failsafe check".format(self.name))
             self.state._logger("-------------------------------------- NOT IMPLEMENTED failsafe check")
-            MODE = self.vehicle.mode
+            MODE = self.vehicle.mode.name
             PLND_ANGLE_MAX = self.vehicle.parameters['PLND_ANGLE_MAX']
             PLND_TACQ_DURATION = self.vehicle.parameters['PLND_TAR_ACQUIRE']
             PLND_YAW_ALIGN = self.vehicle.parameters['PLND_YAW_ALIGN']
             WPNAV_ANGLE_MAX = self.vehicle.parameters['WPNAV_ANGLE_MAX']
             ANGLE_MAX = self.vehicle.parameters['ANGLE_MAX']
-            self.state._logger("Mode: {} :: PLND_AM: {} :: WPNAV_AM: {} :: AM: {} :: Tacq: {}ms :: YawAlign :: {}".\
+            # self.state._logger("Mode: {} :: PLND_AM: {} :: WPNAV_AM: {} :: AM: {} :: Tacq: {}ms :: YawAlign :: {}".\
+            #     format(MODE, PLND_ANGLE_MAX, WPNAV_ANGLE_MAX, ANGLE_MAX, PLND_TACQ_DURATION, PLND_YAW_ALIGN))
+            sd_logger.info("Mode: {} :: PLND_AM: {} :: WPNAV_AM: {} :: AM: {} :: Tacq: {}ms :: YawAlign :: {}".\
                 format(MODE, PLND_ANGLE_MAX, WPNAV_ANGLE_MAX, ANGLE_MAX, PLND_TACQ_DURATION, PLND_YAW_ALIGN))
             sd_logger.info(self.vehicle.channels)
             sd_logger.info(self.vehicle.plnd)
