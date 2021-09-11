@@ -1,7 +1,8 @@
 import math
 import logging
 sd_logger = logging.getLogger('sm') # smartdrone
-log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+# log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+log_formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
 file_handler = logging.FileHandler('smartdrone.log')
 file_handler.setFormatter(log_formatter)
 sd_logger.addHandler(file_handler)
@@ -112,3 +113,22 @@ def get_location_metres(original_location, dNorth, dEast):
         raise Exception("Invalid Location object passed")
         
     return targetlocation
+
+def get_location_difference_metres(location1, location2):
+    """
+    Based on get_location_metres
+    """
+    earth_radius = 6378137.0 #Radius of "spherical" earth
+    #Coordinate offsets in radians
+    dLat = (location2.lat - location1.lat)*math.pi/180 # in rad
+    dLon = (location2.lon - location1.lon)*math.pi/180 # in rad
+
+    dNorth = dLat * earth_radius
+    dEast = dLon*earth_radius*math.cos(math.pi*location1.lat/180)
+    if type(location1) is LocationGlobalRelative and type(location2) is LocationGlobal:
+        H = location1.alt
+    elif type(location1) is LocationGlobalRelative and type(location2) is LocationGlobalRelative:
+        H = location1.alt - location2.alt
+    else:
+        raise Exception("Invalid Location object passed")
+    return (dNorth, dEast, H)

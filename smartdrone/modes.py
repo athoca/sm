@@ -9,6 +9,7 @@ class PLMode(SmartMode):
         super(PLMode, self).__init__(*args)
         self.name = 'PL' # precision_landing
         self.state = PL_ManualControl(self.vehicle, self)
+        self._original_heading = None # TODO: temporary support for develop yaw detection, remove in future
     
     def check_current_state_complete(self):
         # ManualControl     : 0 => not completed, 1 => next: LandingPadSearch

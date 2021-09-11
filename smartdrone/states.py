@@ -2,7 +2,8 @@ from logging import error
 from os import name
 from re import search
 from smartdrone.core import ModeState
-from smartdrone.utils import sd_logger, wait_0_5s, wait_1s, wait_5s, do_nothing, get_distance_metres, get_location_metres, rad2degree
+from smartdrone.utils import sd_logger, wait_0_5s, wait_1s, wait_5s, do_nothing, \
+                        get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree
 from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
 import random
 import time
@@ -29,6 +30,9 @@ class PL_ManualControl(ModeState):
         self._last_override_time = time.time()
         wait_1s() # time to received mavlink mode update, it's safe to be slow here.
         time.sleep(0.5) # temporary add to reduce frequence of overriding.
+        if self.mode._original_heading is None:
+            if self.vehicle.heading is not None:
+                self.mode._original_heading = self.vehicle.heading
 
     def _update_navigation(self):
         do_nothing()
@@ -128,11 +132,18 @@ class PL_LandingPadSearch(ModeState):
             return
     
     def _do_detection(self):
-        # TODO: implement logic + set target position from detection (for next state)
         wait_1s()
-        self._is_detected = random.choice([0,1])
+        wait_1s()
+        # TODO: implement logic + set target position from detection (for next state)
+        # logging current position - home_location, convert to meters (N, E, H), attitude
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
+        sd_logger.info(self.vehicle.attitude)
+        NED = get_location_difference_metres(current_location, home_location)
+        self._logger("To target NED: {}".format(NED))
+        self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
+
+        self._is_detected = random.choice([0,0,1])
         self.detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
         
 
@@ -256,11 +267,23 @@ class PL_LandingPadGo(ModeState):
     
     def _do_detection(self):
         wait_1s()
+        wait_1s()
+        # TODO: update detected_target based on detection result.
+        # TODO: update detected_yaw based on detection result.
+        # logging current position - home_location, convert to meters (N, E, H), attitude
+        current_location = self.vehicle.location.global_relative_frame
+        home_location = self.vehicle.home_location # not Relative but absolut location.
+        sd_logger.info(self.vehicle.attitude)
+        NED = get_location_difference_metres(current_location, home_location)
+        self._logger("To target NED: {}".format(NED))
+        self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
+        self._logger("Current heading: {}".format(self.vehicle.heading))
+        self._logger("Original heading: {}".format(self.mode._original_heading))
+
         self._is_detected = random.choice([0,1,1,1])
         if not self._is_detected: # retry
             self._is_detected = random.choice([0,1,1,1])
-        # TODO: update detected_target based on detection result.
-        # TODO: update detected_yaw based on detection result.
+        
         
 
 
@@ -297,6 +320,9 @@ class PL_LandingPadLand(ModeState):
             # TODO: check self._target_yaw - current yaw < error, if ok => check target acquired
                 self._is_yawing = False
                 self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
+            return
+
+        self._logger("Current H = {}".format(self.vehicle.get_height()))
 
     def _update_navigation(self):
         if self._is_yawing:
@@ -356,8 +382,19 @@ class PL_LandingPadLand(ModeState):
             self.vehicle.mode = VehicleMode('GUIDED')
     
     def _detect_yaw(self):
+        wait_1s()
+        wait_1s()
         # TODO: update detected_yaw based on detection result.
-        wait_0_5s()
+        # logging current position - home_location, convert to meters (N, E, H), attitude. Original_Heading, Height (from Rangefinder if available)
+        current_location = self.vehicle.location.global_relative_frame
+        home_location = self.vehicle.home_location # not Relative but absolut location.
+        sd_logger.info(self.vehicle.attitude)
+        NED = get_location_difference_metres(current_location, home_location)
+        self._logger("To target NED: {}".format(NED))
+        self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
+        self._logger("Current heading: {}".format(self.vehicle.heading))
+        self._logger("Original heading: {}".format(self.mode._original_heading))
+
 
 class PL_IRBeaconSearch(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadLand, 2 => back: ManualControl, 3 => LandingPadSearch
