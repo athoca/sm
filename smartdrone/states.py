@@ -62,6 +62,7 @@ class PL_LandingPadSearch(ModeState):
         # repeated 2 steps in the state:
         self._navigation = True
         self._doing = False
+        self._stop_yaw_when_goto = False # TODO: temporary support for goto without yawing
 
     def _is_from_ground(self):
         # return (not self.vehicle.armed) or (self._original_location.alt < 0.7)
@@ -85,6 +86,7 @@ class PL_LandingPadSearch(ModeState):
     def _compute_mission(self):
         """Repeat wandering in a square area then detecting landing pad until detected.
         """
+
         if self._navigation:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self.target_location['loc'])
@@ -99,6 +101,9 @@ class PL_LandingPadSearch(ModeState):
     def _update_navigation(self):
         if self._navigation:
             if not self.from_ground:
+                if not self._stop_yaw_when_goto:
+                    self.vehicle.condition_yaw(self.vehicle.heading)
+                    self._stop_yaw_when_goto = True
                 self._logger("GOING TO target location {}".format(self.target_location['idx']))
                 self.vehicle.simple_goto(self.target_location['loc'])    
             else:
@@ -319,7 +324,15 @@ class PL_LandingPadLand(ModeState):
             if dist < 5: # in degree
             # TODO: check self._target_yaw - current yaw < error, if ok => check target acquired
                 self._is_yawing = False
+                self._logger("SWITCH TO LOITER MODE FIRST. WAIT 1s.")
+                #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
+                self._logger("Set throttle to 1500 via channel overrides.")
+                self.vehicle.channels.overrides['3'] = 1500
+                self._set_vehicle_loiter_mode(wait_ready=True, wait_time=2)
+                
+                time.sleep(1)
                 self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
+                self._logger("SWITCH BACK LAND MODE SECOND.")
             return
 
         self._logger("Current H = {}".format(self.vehicle.get_height()))
@@ -339,7 +352,8 @@ class PL_LandingPadLand(ModeState):
             self._is_yawing = True
             # TODO: update _target_yaw based on detection result.
             # self._target_yaw = self.detected_yaw
-            self._target_yaw = 300
+            # self._target_yaw = 300
+            self._target_yaw = self.mode._original_heading
             return
 
     def _verify_complete_code(self):
@@ -356,6 +370,18 @@ class PL_LandingPadLand(ModeState):
             if not self._target_acquired:
                 self.complete_code = 1
                 return    
+
+    def _set_vehicle_loiter_mode(self, wait_ready=False, wait_time=2):
+        """To make sure set mode have enough time to be done, before verify_complete_code run"""
+        if wait_ready:
+            self.vehicle.mode = VehicleMode('LOITER')
+            time.sleep(0.2) # wait time for set mode done
+            start = time.time()
+            while self.vehicle.mode != VehicleMode('LOITER') or time.time()-start<wait_time:
+                self.vehicle.mode = VehicleMode('LOITER')
+                time.sleep(0.2) # wait time for set mode done
+        else:
+            self.vehicle.mode = VehicleMode('LOITER')
 
     def _set_vehicle_land_mode(self, wait_ready=False, wait_time=2):
         """To make sure set mode have enough time to be done, before verify_complete_code run"""
