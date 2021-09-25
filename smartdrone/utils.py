@@ -68,6 +68,25 @@ class PLND(object):
         """
         return "PLND: TAcq={},LastMeasMS={},pX={},pY={},vX={},vY={},H={},ts={}".format(self.TAcq, self.LastMeasMS, self.pX,self.pY,self.vX,self.vY,self.H,self.ts)
 
+class FailSafe(object):
+    """
+    The FailSafe from SYS_STATUS onboard_control_sensors_health from mavlink message.
+    """
+    def __init__(self, radio=0, ts=None):
+        """
+        PLND object constructor.
+        """
+        self.radio = radio
+        self.ts = ts
+        
+    def __str__(self):
+        """
+        String representation used to print the PLND object. 
+        """
+        return "Failsafe: Radio={}, ts={}".format(self.radio, self.ts)
+
+
+
 def get_distance_metres(aLocation1, aLocation2):
     """
     Returns the ground distance in metres between two LocationGlobal objects.

@@ -3,7 +3,7 @@
 import dronekit
 from pymavlink import mavutil # Needed for command message definitions
 import time
-from smartdrone.utils import sd_logger, wait_1s
+from smartdrone.utils import sd_logger, wait_1s, get_location_difference_metres
 
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
@@ -93,7 +93,13 @@ class SmartMode:
             sd_logger.info(self.vehicle.battery)
             sd_logger.info(self.vehicle.channels)
             sd_logger.info(self.vehicle.plnd)
-
+            sd_logger.info(self.vehicle.attitude)
+            gimbal_angles = (self.vehicle.gimbal.pitch, self.vehicle.gimbal.roll, self.vehicle.gimbal.yaw)
+            sd_logger.info("Gimbal pitch, roll, yaw: {}".format(gimbal_angles))
+            current_location = self.vehicle.location.global_relative_frame
+            home_location = self.vehicle.home_location # not Relative but absolut location.
+            NED = get_location_difference_metres(current_location, home_location)
+            sd_logger.info("To target NED: {}".format(NED))
         else:
             sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
             sd_logger.info("Back to AltHold mode")

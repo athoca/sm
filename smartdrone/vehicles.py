@@ -1,7 +1,7 @@
 import dronekit
 from smartdrone.core import SmartDrone
 from smartdrone.modes import ArdupilotMode, PLMode
-from smartdrone.utils import sd_logger, PLND
+from smartdrone.utils import FailSafe, sd_logger, PLND
 
 class PLSmartDrone(SmartDrone):
     """Specific Smart Drone need specific mavlink info and fly controlling function.
@@ -12,6 +12,7 @@ class PLSmartDrone(SmartDrone):
         self.smartmode = PLMode(self)
         # Create an Vehicle.plnd object with initial values set to None.
         self.plnd = PLND()
+        self.failsafe = FailSafe()
 
         @self.on_message('RANGEFINDER')
         def _callback(self, _, message):
@@ -28,6 +29,12 @@ class PLSmartDrone(SmartDrone):
             self.plnd.LastMeasMS = message.lng
             self.plnd.ts = message._timestamp
             # sd_logger.debug(message)
+
+        @self.on_message('SYS_STATUS')
+        def _callback(self, _, message):
+            health = message.onboard_control_sensors_health
+            self.failsafe.radio = bin(health)[-17] # failsafe bit -17
+            self.failsafe.ts = message._timestamp
 
         # TODO: attitude: rad
     def get_height(self):
