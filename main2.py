@@ -1,7 +1,11 @@
-from smartdrone.utils import sd_logger
+from smartdrone.utils import sd_logger, is_on_Xavier
 from smartdrone.vehicles import connect_to_PLdrone
 import time
 import math
+
+if is_on_Xavier():
+    import sys
+    sys.path.append('/home/bootai/.local/lib/python3.6/site-packages')
 
 
 def rad2degree(rad):
@@ -31,14 +35,15 @@ print("AAAAAAAAA")
 #     smartdrone.condition_yaw(-40, relative=True)
 #     time.sleep(2)
 while True:
-    sd_logger.info(smartdrone.plnd)
-    currentLocation = smartdrone.location.global_relative_frame
-    sd_logger.info("ALT : {}".format(currentLocation.alt))
+    # sd_logger.info(smartdrone.plnd)
+    # currentLocation = smartdrone.location.global_relative_frame
+    # sd_logger.info("ALT : {}".format(currentLocation.alt))
     # sd_logger.info(smartdrone.attitude)
-    sd_logger.info("PLND_ANGLE_MAX : {}".format(smartdrone.parameters['PLND_ANGLE_MAX']))
-    sd_logger.info("WPNAV_ANGLE_MAX : {}".format(smartdrone.parameters['WPNAV_ANGLE_MAX']))
-    sd_logger.info("ANGLE_MAX : {}".format(smartdrone.parameters['ANGLE_MAX']))
-    sd_logger.info("PLND_SMART_MODE : {}".format(smartdrone.parameters['PLND_SMART_MODE']))
+    # sd_logger.info("PLND_ANGLE_MAX : {}".format(smartdrone.parameters['PLND_ANGLE_MAX']))
+    # sd_logger.info("WPNAV_ANGLE_MAX : {}".format(smartdrone.parameters['WPNAV_ANGLE_MAX']))
+    # sd_logger.info("ANGLE_MAX : {}".format(smartdrone.parameters['ANGLE_MAX']))
+    # sd_logger.info("PLND_SMART_MODE : {}".format(smartdrone.parameters['PLND_SMART_MODE']))
+    # sd_logger.info("Get Height: {}".format(smartdrone.get_height()))
     
     # homeLocation = smartdrone.home_location
     # sd_logger.info(currentLocation)
@@ -54,8 +59,14 @@ while True:
 
     # #set the channel overrides which avoids crashing when mode changed to loiter
     # print("setting throttle channel to 1500 via channel overrides")
-    # sd_logger.info(smartdrone.channels)
+    sd_logger.info(smartdrone.channels)
+    # sd_logger.info(smartdrone.battery)
     # sd_logger.info(smartdrone.channels.overrides)
     # smartdrone.channels.overrides['3'] = 1500
     # sd_logger.info(smartdrone.channels)
-    time.sleep(3)
+    sd_logger.info(smartdrone.failsafe)
+    gimbal_angles = (smartdrone.gimbal.pitch, smartdrone.gimbal.roll, smartdrone.gimbal.yaw)
+    sd_logger.info(gimbal_angles)
+
+
+    time.sleep(2)

@@ -1,6 +1,9 @@
-from smartdrone.utils import sd_logger
+from smartdrone.utils import sd_logger, is_on_Xavier
 from smartdrone.vehicles import connect_to_PLdrone
 
+if is_on_Xavier():
+    import sys
+    sys.path.append('/home/bootai/.local/lib/python3.6/site-packages')
 
 # Set up option parsing to get connection string
 import argparse

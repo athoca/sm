@@ -1,16 +1,33 @@
 import math
+import os
+
+def is_on_Xavier():
+    name = os.uname()[1]
+    if name == "bootai":
+        return True
+    else:
+        return False
+
+def get_logging_file():
+    Xavier_logging_folder = "/home/bootai/workspace/sm"
+    filename = "smartdrone.log"
+    if os.path.exists(Xavier_logging_folder):
+        return os.path.join(Xavier_logging_folder, filename)
+    else:
+        return filename
+
 import logging
 sd_logger = logging.getLogger('sm') # smartdrone
 # log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 log_formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
-file_handler = logging.FileHandler('smartdrone.log')
+logging_file = get_logging_file()
+file_handler = logging.FileHandler(logging_file)
 file_handler.setFormatter(log_formatter)
 sd_logger.addHandler(file_handler)
 sd_logger.setLevel(logging.DEBUG)
+
 import time
-
 from dronekit import LocationGlobal, LocationGlobalRelative
-
 
 def do_nothing():
     pass
