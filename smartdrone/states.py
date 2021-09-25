@@ -55,6 +55,9 @@ class PL_LandingPadSearch(ModeState):
         self._original_location = self.vehicle.location.global_relative_frame
         self.target_altitude = LandingPadSearch_Config.ALTITUDE
         self.error_threshold = LandingPadSearch_Config.ERROR_THRESHOLD
+        self.nb_squares = LandingPadSearch_Config.WANDERING_NB_SQUARES
+        self.square_size = LandingPadSearch_Config.WANDERING_SQUARE_SIZE
+
         # set first target location
         self.target_location = {"idx":[0,0],
             "loc":LocationGlobalRelative(self._original_location.lat, self._original_location.lon, self.target_altitude)}
@@ -70,7 +73,8 @@ class PL_LandingPadSearch(ModeState):
 
     def _update_target_location(self, square_size=8, nb_squares=1):
         # TODO future: increase square_size after a long time.
-        # TODO: update square_size and nb_squares from config
+        square_size = self.square_size
+        nb_squares = self.nb_squares
         current_i = self.target_location['idx'][0]
         current_j = self.target_location['idx'][1]
         li = list(range(-nb_squares, nb_squares+1))
