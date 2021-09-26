@@ -154,6 +154,13 @@ def get_location_difference_metres(location1, location2):
     """
     Based on get_location_metres
     """
+    if type(location1) is LocationGlobalRelative and type(location2) is LocationGlobal:
+        H = location1.alt
+    elif type(location1) is LocationGlobalRelative and type(location2) is LocationGlobalRelative:
+        H = location1.alt - location2.alt
+    else:
+        raise Exception("Invalid Location object passed")
+        
     earth_radius = 6378137.0 #Radius of "spherical" earth
     #Coordinate offsets in radians
     dLat = (location2.lat - location1.lat)*math.pi/180 # in rad
@@ -161,10 +168,5 @@ def get_location_difference_metres(location1, location2):
 
     dNorth = dLat * earth_radius
     dEast = dLon*earth_radius*math.cos(math.pi*location1.lat/180)
-    if type(location1) is LocationGlobalRelative and type(location2) is LocationGlobal:
-        H = location1.alt
-    elif type(location1) is LocationGlobalRelative and type(location2) is LocationGlobalRelative:
-        H = location1.alt - location2.alt
-    else:
-        raise Exception("Invalid Location object passed")
+    
     return (dNorth, dEast, H)
