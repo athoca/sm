@@ -150,7 +150,13 @@ class PL_LandingPadSearch(ModeState):
         NED = get_location_difference_metres(current_location, home_location)
         self._logger("To target NED: {}".format(NED))
         self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
-
+        self.vehicle.channels.overrides['6'] = 1340 # 1642
+        wait_1s()
+        wait_1s()
+        self._logger("Rotated gimbal by overwriting channel 6 = 1340")
+        wait_1s()
+        self.vehicle.channels.overrides['6'] = 1642
+        self._logger("Rotated gimbal by overwriting channel 6 = 1642")
         self._is_detected = random.choice([0,0,1])
         self.detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
         
