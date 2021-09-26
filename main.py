@@ -1,8 +1,8 @@
-from smartdrone.utils import is_on_Xavier
-if is_on_Xavier():
+import os
+name = os.uname()[1]
+if name == "bootai":
     import sys
     sys.path.append('/home/bootai/.local/lib/python3.6/site-packages')
-
 
 from smartdrone.utils import sd_logger
 from smartdrone.vehicles import connect_to_PLdrone
