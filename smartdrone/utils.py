@@ -28,6 +28,39 @@ sd_logger.setLevel(logging.DEBUG)
 
 import time
 from dronekit import LocationGlobal, LocationGlobalRelative
+import struct
+import redis
+import numpy as np
+import math
+
+# Redis connection
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+def save_stack_to_redis(r, data, name):
+    """Data is dict including timestamp e.g {"stack": stack_in_numpy_array, "timestamp": timestamp}
+    """
+    array = data["stack"]
+    h, w, c = array.shape
+    shape = struct.pack('>III',h,w,c)
+    encoded = shape + array.tobytes()
+    timestamp = data["timestamp"]
+    encoded_dict = {"stack": encoded, "timestamp": timestamp}
+    r.hmset(name, encoded_dict)
+    return
+
+def load_stack_from_redis(r, name, dtype=np.uint8):
+    """Retrieve Stack and timestamp from Redis key name"""
+    redis_encoded_dict = r.hgetall(name)
+    if redis_encoded_dict:
+        encoded = redis_encoded_dict[b"stack"]
+        hwc_offset = 4*3
+        h, w, c = struct.unpack('>III', encoded[:hwc_offset])
+        array = np.frombuffer(encoded, dtype=dtype, offset=hwc_offset).reshape(h, w, c)
+        timestamp = float(redis_encoded_dict[b"timestamp"].decode("utf=8"))
+        return {"stack": array, "timestamp": timestamp}
+    else:
+        return {}
+
 
 def do_nothing():
     pass
