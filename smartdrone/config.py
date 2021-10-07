@@ -1,3 +1,10 @@
+class AutoMission_Config:
+    TAKEOFF_ALTITUDE = 15 # in meter
+    MISSION_ALTITUDE = 20 # in meter
+    NORTH = 0 # in meter
+    EAST = 15 # in meter
+    ERROR_THRESHOLD = 1.2 # in meter, the limit drone must be able acheive, if not it will stand without moving.
+    
 class LandingPadSearch_Config:
     ALTITUDE = 15 # in meter
     ERROR_THRESHOLD = 1.2 # in meter, the limit drone must be able acheive, if not it will stand without moving.

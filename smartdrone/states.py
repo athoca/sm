@@ -5,13 +5,14 @@ from smartdrone.core import ModeState
 from smartdrone.utils import sd_logger, do_nothing, \
                         get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree, degree2degree
 from smartdrone.utils import detect_landingpad, detect_yaw
-from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
+from smartdrone.config import AutoMission_Config, LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
 import random
 import time
 from dronekit import VehicleMode
 from dronekit import LocationGlobal, LocationGlobalRelative
+
 class PL_ManualControl(ModeState):
-    # complete code: 0 => not completed, 1 => next: LandingPadSearch
+    # complete code: 0 => not completed, 1 => next: LandingPadSearch, 4 => AutoMission
     def __init__(self, *args):
         super().__init__(*args)
         self.name = 'ManualControl'
@@ -49,6 +50,100 @@ class PL_ManualControl(ModeState):
         if self.vehicle.mode == VehicleMode('GUIDED') and self.vehicle.last_mode == VehicleMode('LOITER'):
                 self.complete_code = 1
                 return
+        if self.vehicle.mode == VehicleMode('GUIDED') and self.vehicle.last_mode == VehicleMode('LAND'):
+                self.complete_code = 4
+                return
+
+class PL_AutoMission(ModeState):
+    # complete code: 0 => not completed, 1 => next: LandingPadSearch, 2 => ManualControl
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.name = 'AutoMission'
+        self._original_location = self.vehicle.location.global_relative_frame # set current position to go back before switching LandingPadSearch
+        self.takeoff_altitude = AutoMission_Config.TAKEOFF_ALTITUDE
+        self.mission_altitude = AutoMission_Config.MISSION_ALTITUDE
+        self.to_north = AutoMission_Config.NORTH
+        self.to_east = AutoMission_Config.EAST
+        self.error_threshold = AutoMission_Config.ERROR_THRESHOLD
+
+        self.from_ground = self._is_from_ground()
+        self.target_nb = 1
+        self.target_location = None
+        self._update_target_location()
+
+        # repeated 2 steps in the state:
+        self._navigation = True
+        self._is_complete = False
+        self._stop_yaw_when_goto = False # TODO: temporary support for goto without yawing
+
+        # If not start from ground, stop navigation, switch back to ManualControl
+        if not self.from_ground:
+           self._navigation = False
+           self.complete_code = 2
+
+    def _is_from_ground(self):
+        return (not self.vehicle.armed) or (self.vehicle.get_height() < 0.2)
+
+    def _update_target_location(self):
+        """ 3 targets, then _is_complete = 1 and _navigation = False
+        """
+        if self.target_nb == 1:
+            self.target_location = LocationGlobalRelative(self._original_location.lat, self._original_location.lon, self.takeoff_altitude)
+            self.target_nb = 2
+        elif self.target_nb == 2:
+            original_target_location = LocationGlobalRelative(self._original_location.lat, self._original_location.lon, self.mission_altitude)
+            self.target_location = get_location_metres(original_target_location, self.to_north, self.to_east)
+            self.target_nb = 3
+        elif self.target_nb == 3:
+            self.target_location = LocationGlobalRelative(self._original_location.lat, self._original_location.lon, self.takeoff_altitude)
+            self.target_nb = 4
+        elif self.target_nb == 4:
+            self._is_complete = True
+            self._navigation = False
+
+    def _compute_mission(self):
+        """
+        """
+        if self._navigation:
+            current_location = self.vehicle.location.global_relative_frame
+            dist = get_distance_metres(current_location, self.target_location)
+            self._logger("Distance to target location {}: {}".format(self.target_nb - 1, dist))
+            if dist < self.error_threshold:
+                self.from_ground = False
+                self._update_target_location()
+            return
+
+    def _update_navigation(self):
+        if self._navigation:
+            if not self.from_ground:
+                if not self._stop_yaw_when_goto:
+                    self.vehicle.condition_yaw(self.vehicle.heading)
+                    self._stop_yaw_when_goto = True
+                self._logger("GOING FOR MISSION")
+                self.vehicle.simple_goto(self.target_location)    
+            else:
+                if not self.vehicle.is_armable:
+                    self._logger(" Waiting for vehicle armable to initialise...")
+                    return
+                else:
+                    if not self.vehicle.armed:
+                        self._logger("Waiting for arming motors")
+                        self.vehicle.armed = True
+                        return
+                self._logger("TAKING OFF to target altitude {} m".format(self.takeoff_altitude))
+                self._logger("Altitude: {}".format(self.vehicle.get_height()))
+                self.vehicle.simple_takeoff(self.takeoff_altitude) # Take off to target altitude
+
+    def _update_doing(self):
+        do_nothing()
+
+    def _verify_complete_code(self):
+        if self.vehicle.mode != VehicleMode('GUIDED'):
+            self.complete_code = 2
+            return
+        if self._is_complete:
+            self.complete_code = 1
+            return
 
 class PL_LandingPadSearch(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadGo, 2 => back: ManualControl (if mode != GUIDED)

@@ -1,5 +1,5 @@
 from smartdrone.core import SmartMode
-from smartdrone.states import PL_ManualControl, PL_LandingPadSearch, PL_LandingPadGo, PL_LandingPadLand, PL_IRBeaconSearch
+from smartdrone.states import PL_AutoMission, PL_ManualControl, PL_LandingPadSearch, PL_LandingPadGo, PL_LandingPadLand, PL_IRBeaconSearch
 from smartdrone.utils import sd_logger
 
 class PLMode(SmartMode):
@@ -28,8 +28,12 @@ class PLMode(SmartMode):
                 self.state = PL_ManualControl(self.vehicle, self)
             elif complete_code == 3:
                 self.state = PL_LandingPadSearch(self.vehicle, self)
+            elif complete_code == 4:
+                self.state = PL_AutoMission(self.vehicle, self)
             elif complete_code == 1:
                 if self.state == 'ManualControl': 
+                    self.state = PL_LandingPadSearch(self.vehicle, self)
+                elif self.state == 'AutoMission': 
                     self.state = PL_LandingPadSearch(self.vehicle, self)
                 elif self.state == 'LandingPadSearch': 
                     self.state = PL_LandingPadGo(self.state.detected_target, self.vehicle, self)
