@@ -153,6 +153,8 @@ class PL_LandingPadSearch(ModeState):
         # TODO: remove home_location argument
         self._is_detected, self.detected_target = detect_landingpad(H=H, is_gimbal_rotated=False, home_location=home_location)
         self._logger("LandingPad Detection is {}".format(self._is_detected))
+        if self._is_detected:
+            self._logger("LandingPad target is at {}".format(self.detected_target))
 
         if not self._is_detected:
             self.vehicle.channels.overrides['6'] = 1340 # 1340: gimbal rotated, 1642: gimbal original
@@ -164,6 +166,8 @@ class PL_LandingPadSearch(ModeState):
             # TODO: remove home_location argument
             self._is_detected, self.detected_target = detect_landingpad(H=H, is_gimbal_rotated=False, home_location=home_location)
             self._logger("LandingPad Detection is {}".format(self._is_detected))
+            if self._is_detected:
+                self._logger("LandingPad target is at {}".format(self.detected_target))
             self.vehicle.channels.overrides['6'] = 1642
             wait_1s() # wait so gimbal rotate to orignal position
             self._logger("Rotated gimbal by overwriting channel 6 = 1642")
@@ -172,7 +176,7 @@ class PL_LandingPadSearch(ModeState):
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
         NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To target NED: {}".format(NED))
+        self._logger("To home location NED: {}".format(NED))
 
 
 class PL_LandingPadGo(ModeState):
@@ -182,9 +186,11 @@ class PL_LandingPadGo(ModeState):
         self.name = 'LandingPadGo'
         self.detected_target = target
         self.detected_yaw = None
+        self._is_detected = None
         self._lost_target = False
         self._target_acquired = False
         self.error_threshold = LandingPadGo_Config.ERROR_THRESHOLD
+        self.angle_error_threshold = LandingPadGo_Config.ANGLE_ERROR_THRESHOLD
         self.h2 = LandingPadGo_Config.H2
         self.h1 = LandingPadGo_Config.H1
         self._target_location_h2 = LocationGlobalRelative(target.lat, target.lon, self.h2)
@@ -224,7 +230,7 @@ class PL_LandingPadGo(ModeState):
             current_yaw = rad2degree(self.vehicle.attitude.yaw)
             dist = abs(current_yaw - self._target_yaw)
             self._logger("Distance to CORRECT YAW: {}".format(dist))
-            if dist < 5: # in degree
+            if dist < self.angle_error_threshold: # in degree
                 # TODO: in case of 0 degree, the current yaw oscilate 0 and 360.
                 # check self._target_yaw - current yaw < error, if ok => precheck_land()
                 self._is_yawing = False
@@ -302,12 +308,14 @@ class PL_LandingPadGo(ModeState):
         # TODO: remove home_location argument, update current H
         self._is_detected, self.detected_target = detect_landingpad(H=H, is_gimbal_rotated=False, home_location=home_location)
         self._logger("LandingPad Detection is {}".format(self._is_detected))
+        if self._is_detected:
+            self._logger("LandingPad target is at {}".format(self.detected_target))
 
         # Keep for debug purpose, remove later (assumption drone start from landing pad position)
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
         NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To target NED: {}".format(NED))
+        self._logger("To home location NED: {}".format(NED))
         self._logger("Original heading: {}".format(self.mode._original_heading))
 
     def _do_detection_on_h1(self):
@@ -327,7 +335,7 @@ class PL_LandingPadGo(ModeState):
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
         NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To target NED: {}".format(NED))
+        self._logger("To home location NED: {}".format(NED))
         self._logger("Original heading: {}".format(self.mode._original_heading))
     
     def _do_preland_check(self):
@@ -348,7 +356,11 @@ class PL_LandingPadLand(ModeState):
         super().__init__(*args)
         self.name = 'LandingPadLand'
         self.H = LandingPadLand_Config.H_YAW
-        self._target_acquired = True
+        self.angle_error_threshold = LandingPadLand_Config.ANGLE_ERROR_THRESHOLD
+        self.detected_yaw = None
+        self._is_detected = None
+        self._target_yaw = None
+        self._target_acquired = True # Now assumpt that precision landing sucessfully, _target_acquired always True => never IRBeaconSearch
         # sequence of 3 steps of the state:
         self._descending = True         # descend
         self._doing_on_H = False    # detect yaw
@@ -369,42 +381,40 @@ class PL_LandingPadLand(ModeState):
 
         if self._is_yawing:
             current_yaw = rad2degree(self.vehicle.attitude.yaw)
+            # TODO: in case of 0 degree, the current yaw oscilate 0 and 360.
             dist = abs(current_yaw - self._target_yaw)
             self._logger("Distance to CORRECT YAW: {}".format(dist))
-            if dist < 5: # in degree
-            # TODO: check self._target_yaw - current yaw < error, if ok => check target acquired
+            if dist < self.angle_error_threshold: # in degree
+                wait_1s() # wait for stable after yawing
                 self._is_yawing = False
-                self._logger("SWITCH TO LOITER MODE FIRST. WAIT 1s.")
-                #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
-                self._logger("Set throttle to 1500 via channel overrides.")
-                self.vehicle.channels.overrides['3'] = 1500
-                self._set_vehicle_loiter_mode(wait_ready=True, wait_time=2)
-                
-                time.sleep(1)
                 self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
                 self._logger("SWITCH BACK LAND MODE SECOND.")
             return
-
+        
         self._logger("Current H = {}".format(self.vehicle.get_height()))
 
     def _update_navigation(self):
         if self._is_yawing:
             self._logger("YAWING to absolute target {}".format(self._target_yaw))
-            # TODO: send request yawing!
             self.vehicle.condition_yaw(self._target_yaw)
+            return
 
     def _update_doing(self):
         if self._doing_on_H:
             self._logger("DOING DETECTION YAW")
-            self._detect_yaw()
+            self._do_detection_yaw()
             #TODO future: for simplicity, do command is return done immediately. Update if needed later.
             self._doing_on_H = False
             self._is_yawing = True
-            # TODO: update _target_yaw based on detection result.
-            # self._target_yaw = self.detected_yaw
-            # self._target_yaw = 300
-            self._target_yaw = self.mode._original_heading
+            if not self._is_detected:
+                # If not detected, no yaw correction
+                self._target_yaw = self.vehicle.heading
+            else:
+                # TODO: update value for delta_yaw
+                delta_yaw = self.vehicle.heading - 6 # magic value?
+                self._target_yaw = degree2degree(self.detected_yaw + delta_yaw)
             return
+
 
     def _verify_complete_code(self):
         if self.vehicle.mode not in [VehicleMode('LAND'),VehicleMode('GUIDED')]:
@@ -457,19 +467,28 @@ class PL_LandingPadLand(ModeState):
         else:
             self.vehicle.mode = VehicleMode('GUIDED')
     
-    def _detect_yaw(self):
-        wait_1s()
-        wait_1s()
-        # TODO: update detected_yaw based on detection result.
-        # logging current position - home_location, convert to meters (N, E, H), attitude. Original_Heading, Height (from Rangefinder if available)
+    def _do_detection_yaw(self):
+        wait_1s() # wait so the drone stable after moving
+        sd_logger.info(self.vehicle.attitude)
+        H = self.vehicle.get_height()
+        self._logger("Height from rangefinder: {}".format(H))
+        self._logger("Current heading: {}".format(self.vehicle.heading))
+        self._logger("Detecting yaw at 1642.")
+        # TODO: remove home_location argument, update current H
+        self._is_detected, self.detected_yaw = detect_yaw(H=H, is_gimbal_rotated=False)
+        self._logger("Yaw Detection is {}".format(self._is_detected))
+        if self._is_detected:
+            self._logger("Yaw target is {}".format(self.detected_yaw))
+
+        # Keep for debug purpose, remove later (assumption drone start from landing pad position)
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
-        sd_logger.info(self.vehicle.attitude)
         NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To target NED: {}".format(NED))
-        self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
-        self._logger("Current heading: {}".format(self.vehicle.heading))
+        self._logger("To home location NED: {}".format(NED))
         self._logger("Original heading: {}".format(self.mode._original_heading))
+
+
+
 
 
 class PL_IRBeaconSearch(ModeState):

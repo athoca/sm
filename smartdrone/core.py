@@ -100,7 +100,8 @@ class SmartMode:
             home_location = self.vehicle.home_location # not Relative but absolut location.
             if current_location is not None and home_location is not None:
                 NED = get_location_difference_metres(current_location, home_location)
-                sd_logger.info("To target NED: {}".format(NED))
+                sd_logger.info("Current location: {}".format(current_location))
+                sd_logger.info("To home location NED: {}".format(NED))
         else:
             sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
             sd_logger.info("Back to AltHold mode")

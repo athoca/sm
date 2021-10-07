@@ -221,6 +221,7 @@ def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
 
     detected_target = None
     # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
+    # TODO: log detected_target in m in North and East from current position
     if is_detected:
         if home_location is not None:
             detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
@@ -233,6 +234,10 @@ def detect_yaw(H, is_gimbal_rotated=False):
         - run detection on frame, get bboxes
         - if bboxes > 0, detect_yaw
         """
-    is_detected = random.choice([0,1,1,1,1,1,1,1])
-    detected_yaw = 0
+    if H > 4:
+        is_detected = random.choice([0,1,1,1,1,1,1,1])
+        detected_yaw = 0
+    else:
+        is_detected = 1
+        detected_yaw = 0
     return is_detected, detected_yaw
