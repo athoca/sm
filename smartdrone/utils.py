@@ -1,5 +1,6 @@
 import math
 import os
+import random
 
 def is_on_Xavier():
     name = os.uname()[1]
@@ -203,3 +204,19 @@ def get_location_difference_metres(location1, location2):
     dEast = dLon*earth_radius*math.cos(math.pi*location1.lat/180)
     
     return (dNorth, dEast, H)
+
+def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
+    """ TODO
+        - get frame, logging current timestamp - frame timestamps
+        - run detection on frame, get bboxes
+        - if bboxes > 0, set self._is_detected = 1, build self.detected_target = from NED depend on is_gimbal_rotated
+        """
+    frame = None # TODO: get current frame using redis client
+    is_detected = random.choice([0,0,1])
+    detected_target = None
+    # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
+    if is_detected:
+        if home_location is not None:
+            detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
+        
+    return is_detected, detected_target

@@ -4,6 +4,7 @@ from re import search
 from smartdrone.core import ModeState
 from smartdrone.utils import sd_logger, wait_0_5s, wait_1s, wait_5s, do_nothing, \
                         get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree
+from smartdrone.utils import detect_landingpad
 from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
 import random
 import time
@@ -51,7 +52,7 @@ class PL_LandingPadSearch(ModeState):
         self.name = 'LandingPadSearch'
         self.detected_target = None
         self._is_detected = False
-        self._original_location = self.vehicle.location.global_relative_frame
+        self._original_location = self.vehicle.location.global_relative_frame # set current position when switch to LandingPadSearch as original_location
         self.target_altitude = LandingPadSearch_Config.ALTITUDE
         self.error_threshold = LandingPadSearch_Config.ERROR_THRESHOLD
         self.nb_squares = LandingPadSearch_Config.WANDERING_NB_SQUARES
@@ -89,7 +90,6 @@ class PL_LandingPadSearch(ModeState):
     def _compute_mission(self):
         """Repeat wandering in a square area then detecting landing pad until detected.
         """
-
         if self._navigation:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self.target_location['loc'])
@@ -127,9 +127,12 @@ class PL_LandingPadSearch(ModeState):
         if self._doing:
             self._logger("DOING DETECTION")
             self._do_detection()
-            #TODO future: for simplicity, do command is return done immediately. Update if needed later.
-            self._navigation = True
-            self._doing = False
+            if self._is_detected:
+                self._navigation = False
+                self._doing = False
+            else:
+                self._navigation = True
+                self._doing = False
 
     def _verify_complete_code(self):
         if self.vehicle.mode != VehicleMode('GUIDED'):
@@ -140,26 +143,28 @@ class PL_LandingPadSearch(ModeState):
             return
     
     def _do_detection(self):
-        wait_1s()
-        wait_1s()
-        # TODO: implement logic + set target position from detection (for next state)
-        # logging current position - home_location, convert to meters (N, E, H), attitude
+        wait_1s() # wait so the drone stable after moving
+        sd_logger.info(self.vehicle.attitude)
+        self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
+        self._logger("Detecting landing pad at 1642.")
+        home_location = self.vehicle.home_location
+        # TODO: remove home_location argument
+        self._is_detected, self.detected_target = detect_landingpad(14, is_gimbal_rotated=False, home_location=home_location)
+        if not self._is_detected:
+            self.vehicle.channels.overrides['6'] = 1340 # 1340: gimbal rotated, 1642: gimbal original
+            wait_1s() # wait so the drone stable after rotate gimbal
+            self._logger("Rotated gimbal by overwriting channel 6 = 1340. Detecting landing pad at 1340.")
+            # TODO: remove home_location argument
+            self._is_detected, self.detected_target = detect_landingpad(14, is_gimbal_rotated=False, home_location=home_location)
+            self.vehicle.channels.overrides['6'] = 1642
+            wait_1s() # wait so gimbal rotate to orignal position
+            self._logger("Rotated gimbal by overwriting channel 6 = 1642")
+
+        # Keep for debug purpose, remove later (assumption drone start from landing pad position)
         current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location # not Relative but absolut location.
-        sd_logger.info(self.vehicle.attitude)
         NED = get_location_difference_metres(current_location, home_location)
         self._logger("To target NED: {}".format(NED))
-        self._logger("Height from rangefinder: {}".format(self.vehicle.get_height()))
-        self.vehicle.channels.overrides['6'] = 1340 # 1642
-        wait_1s()
-        wait_1s()
-        self._logger("Rotated gimbal by overwriting channel 6 = 1340")
-        self.vehicle.channels.overrides['6'] = 1642
-        wait_1s()
-        self._logger("Rotated gimbal by overwriting channel 6 = 1642")
-        self._is_detected = random.choice([0,0,1])
-        self.detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
-        
 
 
 class PL_LandingPadGo(ModeState):
@@ -188,7 +193,7 @@ class PL_LandingPadGo(ModeState):
     def _compute_mission(self):
         """ Follow three steps: Move, Approach, then Yaw
         """
-        # Move to h2 on top, then detect again, if not => search again
+        # Move to h2 on top, then detect again, if not => search again, if yes => update self._target_location_h1 
         if self._move_on_h2:
             current_location = self.vehicle.location.global_relative_frame
             dist = get_distance_metres(current_location, self._target_location_h2)
