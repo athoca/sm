@@ -2,7 +2,7 @@ from logging import error
 from os import name
 from re import search
 from smartdrone.core import ModeState
-from smartdrone.utils import sd_logger, wait_0_5s, wait_1s, wait_5s, do_nothing, \
+from smartdrone.utils import sd_logger, do_nothing, \
                         get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree, degree2degree
 from smartdrone.utils import detect_landingpad, detect_yaw
 from smartdrone.config import LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
@@ -28,8 +28,13 @@ class PL_ManualControl(ModeState):
         self._logger("Set throttle to 1500 via channel overrides. Last time: {}".format(time.time() - self._last_override_time))
         self.vehicle.channels.overrides['3'] = 1500
         self._last_override_time = time.time()
-        wait_1s() # time to received mavlink mode update, it's safe to be slow here.
-        time.sleep(0.5) # temporary add to reduce frequence of overriding.
+        
+        # time to received mavlink mode update, it's safe to be slow here. Small than 3s so channels overrides updated.
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1.5)
+        if is_mode_changed:
+            return
+
+        # TODO: move the one-time setting in correct place
         if self.mode._original_heading is None:
             if self.vehicle.heading is not None:
                 self.mode._original_heading = self.vehicle.heading
@@ -143,7 +148,10 @@ class PL_LandingPadSearch(ModeState):
             return
     
     def _do_detection(self):
-        wait_1s() # wait so the drone stable after moving
+        # wait so the drone stable after moving
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        if is_mode_changed:
+            return
         sd_logger.info(self.vehicle.attitude)
         self._logger("Detecting landing pad at 1642.")
         H = self.vehicle.get_height()
@@ -158,7 +166,11 @@ class PL_LandingPadSearch(ModeState):
 
         if not self._is_detected:
             self.vehicle.channels.overrides['6'] = 1340 # 1340: gimbal rotated, 1642: gimbal original
-            wait_1s() # wait so the drone stable after rotate gimbal
+            # wait so the drone stable after rotate gimbal
+            is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+            if is_mode_changed:
+                return
+
             self._logger("Rotated gimbal by overwriting channel 6 = 1340. Detecting landing pad at 1340.")
             H = self.vehicle.get_height()
             self._logger("Height from rangefinder: {}".format(H))
@@ -169,7 +181,10 @@ class PL_LandingPadSearch(ModeState):
             if self._is_detected:
                 self._logger("LandingPad target is at {}".format(self.detected_target))
             self.vehicle.channels.overrides['6'] = 1642
-            wait_1s() # wait so gimbal rotate to orignal position
+            # wait so gimbal rotate to orignal position
+            is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+            if is_mode_changed:
+                return
             self._logger("Rotated gimbal by overwriting channel 6 = 1642")
 
         # Keep for debug purpose, remove later (assumption drone start from landing pad position)
@@ -298,7 +313,11 @@ class PL_LandingPadGo(ModeState):
             return
     
     def _do_detection_on_h2(self):
-        wait_1s() # wait so the drone stable after moving
+        # wait so the drone stable after moving
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        if is_mode_changed:
+            return
+
         sd_logger.info(self.vehicle.attitude)
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
@@ -319,7 +338,11 @@ class PL_LandingPadGo(ModeState):
         self._logger("Original heading: {}".format(self.mode._original_heading))
 
     def _do_detection_on_h1(self):
-        wait_1s() # wait so the drone stable after moving
+        # wait so the drone stable after moving
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        if is_mode_changed:
+            return
+
         sd_logger.info(self.vehicle.attitude)
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
@@ -339,7 +362,11 @@ class PL_LandingPadGo(ModeState):
         self._logger("Original heading: {}".format(self.mode._original_heading))
     
     def _do_preland_check(self):
-        wait_1s() # wait so the drone stable after yawing
+        # wait so the drone stable after yawing
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        if is_mode_changed:
+            return
+
         sd_logger.info(self.vehicle.attitude)
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
@@ -385,7 +412,11 @@ class PL_LandingPadLand(ModeState):
             dist = abs(current_yaw - self._target_yaw)
             self._logger("Distance to CORRECT YAW: {}".format(dist))
             if dist < self.angle_error_threshold: # in degree
-                wait_1s() # wait for stable after yawing
+                # wait for stable after yawing
+                is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+                if is_mode_changed:
+                    return
+
                 self._is_yawing = False
                 self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
                 self._logger("SWITCH BACK LAND MODE SECOND.")
@@ -468,7 +499,11 @@ class PL_LandingPadLand(ModeState):
             self.vehicle.mode = VehicleMode('GUIDED')
     
     def _do_detection_yaw(self):
-        wait_1s() # wait so the drone stable after moving
+        # wait so the drone stable after moving
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        if is_mode_changed:
+            return
+
         sd_logger.info(self.vehicle.attitude)
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
@@ -507,11 +542,11 @@ class PL_IRBeaconSearch(ModeState):
         # TODO: fly up to h1 in move on top when rotate yaw, if target acquired, yaw then to land, else search
         # flyup h1, check target acquired, if yes => LAND, not => Search
         self._logger("Executing IR beacon search")
-        wait_1s()
+        do_nothing()
     def _update_navigation(self):
-        wait_1s()
+        do_nothing()
     def _update_doing(self):
-        wait_1s()
+        do_nothing()
 
     def _verify_complete_code(self):
         if self.vehicle.mode != VehicleMode('GUIDED'):

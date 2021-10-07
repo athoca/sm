@@ -3,7 +3,7 @@
 import dronekit
 from pymavlink import mavutil # Needed for command message definitions
 import time
-from smartdrone.utils import sd_logger, wait_1s, get_location_difference_metres
+from smartdrone.utils import sd_logger, get_location_difference_metres
 
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
@@ -137,9 +137,20 @@ class ModeState:
         self._update_navigation()
         self._update_doing()
         #TODO: update wait for a total time = 1-2s each loop
-        wait_1s() # wait here enable drone enough time to do updated command, especially change ardupilot modes if needed.
+        self.wait_and_monitor_vehicle_mode_change(1) # wait here enable drone enough time to do updated command, especially change ardupilot modes if needed.
         self._verify_complete_code()
         
+    def wait_and_monitor_vehicle_mode_change(self, t=1):
+        """ Wait t second while monitoring if mode change.
+        """
+        initial_mode = self.vehicle.mode
+        start = time.time()
+        while time.time()-start< t:
+            if self.vehicle.mode != initial_mode:
+                self._logger("Mode changed when waiting!")
+                return 1
+            time.sleep(0.2) # monitoring interval
+        return 0
     
     def _compute_mission(self):
         """From current status, compute next update of navigation or doing if needed.
