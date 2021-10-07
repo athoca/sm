@@ -82,7 +82,7 @@ def rad2degree(rad):
     return rad/math.pi*180
 
 def degree2degree(degree):
-    # convert any degree (even <0 or >360) to range 180 - 360=0 - 180
+    # convert any degree (even <0 or >360) to range 180 - 360=0(North) - 180
     return degree % 360 
 
 
@@ -212,7 +212,13 @@ def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
         - if bboxes > 0, set self._is_detected = 1, build self.detected_target = from NED depend on is_gimbal_rotated
         """
     frame = None # TODO: get current frame using redis client
-    is_detected = random.choice([0,0,1])
+    if H >13:
+        is_detected = random.choice([0,0,1])
+    elif H > 10:
+        is_detected = random.choice([0,1,1,1,1,1,1,1])
+    else:
+        is_detected = 1
+
     detected_target = None
     # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
     if is_detected:
@@ -220,3 +226,13 @@ def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
             detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
         
     return is_detected, detected_target
+
+def detect_yaw(H, is_gimbal_rotated=False):
+    """ TODO
+        - get frame, logging current timestamp - frame timestamps
+        - run detection on frame, get bboxes
+        - if bboxes > 0, detect_yaw
+        """
+    is_detected = random.choice([0,1,1,1,1,1,1,1])
+    detected_yaw = 0
+    return is_detected, detected_yaw
