@@ -166,7 +166,7 @@ class PL_LandingPadSearch(ModeState):
 
         if not self._is_detected:
             self.vehicle.channels.overrides['6'] = 1340 # 1340: gimbal rotated, 1642: gimbal original
-            # wait so the drone stable after rotate gimbal
+            # wait so the gimbal stable after rotate gimbal
             is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
             if is_mode_changed:
                 return
@@ -348,7 +348,6 @@ class PL_LandingPadGo(ModeState):
         self._logger("Height from rangefinder: {}".format(H))
         self._logger("Current heading: {}".format(self.vehicle.heading))
         self._logger("Detecting yaw at 1642.")
-        # TODO: remove home_location argument, update current H
         self._is_detected, self.detected_yaw = detect_yaw(H=H, is_gimbal_rotated=False)
         self._logger("Yaw Detection is {}".format(self._is_detected))
         if self._is_detected:
@@ -412,7 +411,7 @@ class PL_LandingPadLand(ModeState):
             dist = abs(current_yaw - self._target_yaw)
             self._logger("Distance to CORRECT YAW: {}".format(dist))
             if dist < self.angle_error_threshold: # in degree
-                # wait for stable after yawing
+                # wait for stable after yawing, then set land again
                 is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
                 if is_mode_changed:
                     return
@@ -509,7 +508,6 @@ class PL_LandingPadLand(ModeState):
         self._logger("Height from rangefinder: {}".format(H))
         self._logger("Current heading: {}".format(self.vehicle.heading))
         self._logger("Detecting yaw at 1642.")
-        # TODO: remove home_location argument, update current H
         self._is_detected, self.detected_yaw = detect_yaw(H=H, is_gimbal_rotated=False)
         self._logger("Yaw Detection is {}".format(self._is_detected))
         if self._is_detected:
@@ -539,7 +537,7 @@ class PL_IRBeaconSearch(ModeState):
         If target acquired, switching back LandingPadLand, else LandingPadSearch.
         """
         # tam thoi hoan thien nhung co the ko can dung state nay
-        # TODO: fly up to h1 in move on top when rotate yaw, if target acquired, yaw then to land, else search
+        # TODO future: fly up to h1 in move on top when rotate yaw, if target acquired, yaw then to land, else search
         # flyup h1, check target acquired, if yes => LAND, not => Search
         self._logger("Executing IR beacon search")
         do_nothing()

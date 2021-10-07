@@ -137,7 +137,7 @@ class ModeState:
         self._update_navigation()
         self._update_doing()
         #TODO: update wait for a total time = 1-2s each loop
-        self.wait_and_monitor_vehicle_mode_change(1) # wait here enable drone enough time to do updated command, especially change ardupilot modes if needed.
+        self.wait_and_monitor_vehicle_mode_change(1) # wait here not too much logging each loop, only check ardupilot mode changed if needed.
         self._verify_complete_code()
         
     def wait_and_monitor_vehicle_mode_change(self, t=1):
