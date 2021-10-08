@@ -49,12 +49,21 @@ def save_stack_to_redis(r, data, name):
     encoded = shape + array.tobytes()
     timestamp = data["timestamp"]
     encoded_dict = {"stack": encoded, "timestamp": timestamp}
-    r.hmset(name, encoded_dict)
+    try:
+        r.hmset(name, encoded_dict)
+    except redis.exceptions.ConnectionError as e:
+        sd_logger.error("ERROR: Redis connection error")
     return
+
 
 def load_stack_from_redis(r, name, dtype=np.uint8):
     """Retrieve Stack and timestamp from Redis key name"""
-    redis_encoded_dict = r.hgetall(name)
+    try:
+        redis_encoded_dict = r.hgetall(name)
+    except redis.exceptions.ConnectionError as e:
+        sd_logger.error("ERROR: Redis connection error")
+        return {}
+
     if redis_encoded_dict:
         encoded = redis_encoded_dict[b"stack"]
         hwc_offset = 4*3
@@ -65,9 +74,12 @@ def load_stack_from_redis(r, name, dtype=np.uint8):
     else:
         return {}
 
-def save_dict_to_redis(r, name, detection_dict, ):
-    r.hmset(name, detection_dict)
-
+def save_dict_to_redis(r, name, detection_dict):
+    try:
+        r.hmset(name, detection_dict)
+    except redis.exceptions.ConnectionError as e:
+        sd_logger.error("ERROR: Redis connection error")
+    return
 
 def do_nothing():
     pass
