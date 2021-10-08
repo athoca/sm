@@ -417,10 +417,10 @@ def H_2_bbox_size(H, ratio=1.3):
     size_max = int(size*ratio)
     return size, size_min, size_max
 
-def validate_bbox_size(H, bboxes, scores):
+def validate_bbox_size(H, bboxes, scores, ratio=1.3):
     bs = []
     ss = []
-    _, size_min, size_max = H_2_bbox_size(H)
+    _, size_min, size_max = H_2_bbox_size(H, ratio)
     for i, bbox in enumerate(bboxes):
         bbox_size_min = min(bbox[2],bbox[3])
         bbox_size_max = max(bbox[2],bbox[3])
@@ -462,11 +462,11 @@ def compute_target_NE_gimbal_1340(H, ux, vy, alpha_heading):
     delta_roll = -5 # gimbal error. Negative # Magic number (calibration)
     return compute_target_NE(H, ux, vy, alpha_heading, delta_pan, delta_tilt, delta_roll)
 
-def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated):
+def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=1.3):
     bboxes, scores = landing_pad_detect(RGB_img)
-    bbox, score = filter_score_max(*validate_bbox_size(H, bboxes, scores))
+    bbox, score = filter_score_max(*validate_bbox_size(H, bboxes, scores, ratio))
     if bbox is None:
-        return None, None
+        return None, None, None, None, None, None
     else:
         l,t,w,h = bbox.astype(np.int32)
         u_x = l + w/2
