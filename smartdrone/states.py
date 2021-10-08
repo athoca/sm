@@ -248,7 +248,7 @@ class PL_LandingPadSearch(ModeState):
         is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
-        sd_logger.info(self.vehicle.attitude)
+        self.state_logging()
         self._logger("Detecting landing pad at 1642.")
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
@@ -266,7 +266,7 @@ class PL_LandingPadSearch(ModeState):
             is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_GIMBAL)
             if is_mode_changed:
                 return
-
+            self.state_logging()
             self._logger("Rotated gimbal by overwriting channel 6 = 1340. Detecting landing pad at 1340.")
             H = self.vehicle.get_height()
             self._logger("Height from rangefinder: {}".format(H))
@@ -282,13 +282,6 @@ class PL_LandingPadSearch(ModeState):
             if is_mode_changed:
                 return
             self._logger("Rotated gimbal by overwriting channel 6 = 1642")
-
-        # Keep for debug purpose, remove later (assumption drone start from landing pad position)
-        current_location = self.vehicle.location.global_relative_frame
-        home_location = self.vehicle.home_location # not Relative but absolut location.
-        NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To home location NED: {}".format(NED))
-
 
 class PL_LandingPadGo(ModeState):
     # complete code: 0 => not completed, 1 => next: LandingPadLand, 2 => back: ManualControl, 3 => LandingPadSearch
@@ -413,8 +406,7 @@ class PL_LandingPadGo(ModeState):
         is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
-
-        sd_logger.info(self.vehicle.attitude)
+        self.state_logging()
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
         self._logger("Current heading: {}".format(self.vehicle.heading))
@@ -426,20 +418,13 @@ class PL_LandingPadGo(ModeState):
         if self._is_detected:
             self._logger("LandingPad target is at {}".format(self.detected_target))
 
-        # Keep for debug purpose, remove later (assumption drone start from landing pad position)
-        current_location = self.vehicle.location.global_relative_frame
-        home_location = self.vehicle.home_location # not Relative but absolut location.
-        NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To home location NED: {}".format(NED))
-        self._logger("Original heading: {}".format(self.mode._original_heading))
 
     def _do_detection_on_h1(self):
         # wait so the drone stable after moving
         is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
-
-        sd_logger.info(self.vehicle.attitude)
+        self.state_logging()
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
         self._logger("Current heading: {}".format(self.vehicle.heading))
@@ -449,20 +434,13 @@ class PL_LandingPadGo(ModeState):
         if self._is_detected:
             self._logger("Yaw target is {}".format(self.detected_yaw))
 
-        # Keep for debug purpose, remove later (assumption drone start from landing pad position)
-        current_location = self.vehicle.location.global_relative_frame
-        home_location = self.vehicle.home_location # not Relative but absolut location.
-        NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To home location NED: {}".format(NED))
-        self._logger("Original heading: {}".format(self.mode._original_heading))
     
     def _do_preland_check(self):
         # wait so the drone stable after yawing
         is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_YAW)
         if is_mode_changed:
             return
-
-        sd_logger.info(self.vehicle.attitude)
+        self.state_logging()
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
         self._logger("Current heading: {}".format(self.vehicle.heading))
@@ -598,8 +576,7 @@ class PL_LandingPadLand(ModeState):
         is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
-
-        sd_logger.info(self.vehicle.attitude)
+        self.state_logging()
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
         self._logger("Current heading: {}".format(self.vehicle.heading))
@@ -608,16 +585,6 @@ class PL_LandingPadLand(ModeState):
         self._logger("Yaw Detection is {}".format(self._is_detected))
         if self._is_detected:
             self._logger("Yaw target is {}".format(self.detected_yaw))
-
-        # Keep for debug purpose, remove later (assumption drone start from landing pad position)
-        current_location = self.vehicle.location.global_relative_frame
-        home_location = self.vehicle.home_location # not Relative but absolut location.
-        NED = get_location_difference_metres(current_location, home_location)
-        self._logger("To home location NED: {}".format(NED))
-        self._logger("Original heading: {}".format(self.mode._original_heading))
-
-
-
 
 
 class PL_IRBeaconSearch(ModeState):

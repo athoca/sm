@@ -106,16 +106,17 @@ class SmartMode:
                 format(MODE, PLND_ANGLE_MAX, WPNAV_ANGLE_MAX, ANGLE_MAX, PLND_TACQ_DURATION, PLND_YAW_ALIGN))
             sd_logger.info(self.vehicle.battery)
             sd_logger.info(self.vehicle.channels)
-            sd_logger.info(self.vehicle.plnd)
-            sd_logger.info(self.vehicle.attitude)
-            gimbal_angles = (self.vehicle.gimbal.pitch, self.vehicle.gimbal.roll, self.vehicle.gimbal.yaw)
-            sd_logger.info("Gimbal pitch, roll, yaw: {}".format(gimbal_angles))
-            current_location = self.vehicle.location.global_relative_frame
-            home_location = self.vehicle.home_location # not Relative but absolut location.
-            if current_location is not None and home_location is not None:
-                NED = get_location_difference_metres(current_location, home_location)
-                sd_logger.info("Current location: {}".format(current_location))
-                sd_logger.info("To home location NED: {}".format(NED))
+
+            # sd_logger.info(self.vehicle.plnd)
+            # sd_logger.info(self.vehicle.attitude)
+            # gimbal_angles = (self.vehicle.gimbal.pitch, self.vehicle.gimbal.roll, self.vehicle.gimbal.yaw)
+            # sd_logger.info("Gimbal pitch, roll, yaw: {}".format(gimbal_angles))
+            # current_location = self.vehicle.location.global_relative_frame
+            # home_location = self.vehicle.home_location # not Relative but absolut location.
+            # if current_location is not None and home_location is not None:
+            #     NED = get_location_difference_metres(current_location, home_location)
+            #     sd_logger.info("Current location: {}".format(current_location))
+            #     sd_logger.info("To home location NED: {}".format(NED))
             return 0
         else:
             sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
@@ -194,3 +195,15 @@ class ModeState:
     
     def _logger(self, message):
         sd_logger.info("[{}][{}] ".format(self.mode.name, self.name) + message)
+
+    def state_logging(self):
+        sd_logger.info(self.vehicle.plnd)
+        sd_logger.info(self.vehicle.attitude)
+        gimbal_angles = (self.vehicle.gimbal.pitch, self.vehicle.gimbal.roll, self.vehicle.gimbal.yaw)
+        sd_logger.info("Gimbal pitch, roll, yaw: {}".format(gimbal_angles))
+        current_location = self.vehicle.location.global_relative_frame
+        home_location = self.vehicle.home_location # not Relative but absolut location.
+        if current_location is not None and home_location is not None:
+            NED = get_location_difference_metres(current_location, home_location)
+            sd_logger.info("Current location: {}".format(current_location))
+            sd_logger.info("To home location NED: {}".format(NED))
