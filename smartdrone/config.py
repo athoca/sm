@@ -24,4 +24,7 @@ class LandingPadLand_Config:
     H_YAW = 3 # in meter, quan tinh => se xuong thap hon.
     ANGLE_ERROR_THRESHOLD = 4 # in degree
 
-
+USE_FAKE_DETECTIONS = True
+TIME_STABLE_AFTER_NAVIGATION = 5
+TIME_STABLE_AFTER_YAW = 5
+TIME_STABLE_AFTER_GIMBAL = 3
