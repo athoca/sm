@@ -65,6 +65,9 @@ def load_stack_from_redis(r, name, dtype=np.uint8):
     else:
         return {}
 
+def save_dict_to_redis(r, name, detection_dict, ):
+    r.hmset(name, detection_dict)
+
 
 def do_nothing():
     pass
@@ -251,7 +254,8 @@ def detect_landingpad(H, heading, location, is_gimbal_rotated=False, home_locati
             save_stack_to_redis(r, stack, key_name)
             # TODO: add more infor in the detection_dict
             detection_dict = {"is_detected": is_detected}
-            r.hmset(detection_key_name, detection_dict)
+            save_dict_to_redis(r, detection_key_name, detection_dict)
+            # r.hmset(detection_key_name, detection_dict)
 
             return is_detected, detected_target
             # return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
@@ -294,6 +298,7 @@ def detect_yaw(H, is_gimbal_rotated=False):
             save_stack_to_redis(r, stack, key_name)
             # TODO: add more infor in the detection_dict
             detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw}
-            r.hmset(detection_key_name, detection_dict)
+            save_dict_to_redis(r, detection_key_name, detection_dict)
+            # r.hmset(detection_key_name, detection_dict)
 
             return is_detected, detected_yaw
