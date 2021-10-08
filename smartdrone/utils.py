@@ -253,8 +253,8 @@ def detect_landingpad(H, heading, location, is_gimbal_rotated=False, home_locati
             detection_dict = {"is_detected": is_detected}
             r.hmset(detection_key_name, detection_dict)
 
-            # return is_detected, detected_target
-            return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
+            return is_detected, detected_target
+            # return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
 
 
 
