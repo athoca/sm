@@ -472,7 +472,7 @@ def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated):
         u_x = l + w/2
         v_y = t + h/2
         if not is_gimbal_rotated:
-            to_North, to_East, l,t,w,h = compute_target_NE_gimbal_1642(H, u_x, v_y, heading)
+            to_North, to_East = compute_target_NE_gimbal_1642(H, u_x, v_y, heading)
         else:
-            to_North, to_East, l,t,w,h = compute_target_NE_gimbal_1340(H, u_x, v_y, heading)
+            to_North, to_East = compute_target_NE_gimbal_1340(H, u_x, v_y, heading)
         return to_North, to_East, l,t,w,h
