@@ -4,6 +4,9 @@ import dronekit
 from pymavlink import mavutil # Needed for command message definitions
 import time
 from smartdrone.utils import sd_logger, get_location_difference_metres
+from smartdrone.utils import r
+import redis
+
 
 class SmartDrone(dronekit.Vehicle):
     def __init__(self, *args):
@@ -22,9 +25,15 @@ class SmartDrone(dronekit.Vehicle):
     def start_main_control_loop(self):
         sd_logger.info("Start main control loop!")
         while True:
-            self.smartmode.precheck_mode_failsafe()
-            self.smartmode.run()
-            self.check_mode_change()
+            failsafe = self.smartmode.precheck_mode_failsafe()
+            if failsafe:
+                #TODO: check when should set the channel overrides which avoids crashing when mode changed to loiter
+                sd_logger.info("Set throttle to 1500 via channel overrides.")
+                self.channels.overrides['3'] = 1500
+                time.sleep(1)
+            else:
+                self.smartmode.run()
+                self.check_mode_change()
 
     def check_mode_change(self):
         """Not implemented. We need only 1 smart mode now.
@@ -77,7 +86,12 @@ class SmartMode:
     def precheck_mode_failsafe(self):
         """Check if drone status is ready to run the mode. Mode ready means all state ready.
         """
-        if True:
+        try:
+            ping_ok = r.ping()
+        except redis.exceptions.ConnectionError as e:
+            sd_logger.error("FAILSAFE: Redis connection error")
+            ping_ok = False
+        if ping_ok:
             # sd_logger.info("[{}]NOT IMPLEMENTED failsafe check".format(self.name))
             self.state._logger("-------------------------------------- NOT IMPLEMENTED failsafe check")
             MODE = self.vehicle.mode.name
@@ -102,9 +116,11 @@ class SmartMode:
                 NED = get_location_difference_metres(current_location, home_location)
                 sd_logger.info("Current location: {}".format(current_location))
                 sd_logger.info("To home location NED: {}".format(NED))
+            return 0
         else:
             sd_logger.info("Drone status prechecked, detect failsafe for mode {}".format(self.name))
             sd_logger.info("Back to AltHold mode")
+            return 1
 
     def run(self):
         self.state.handle()
