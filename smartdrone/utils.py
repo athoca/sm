@@ -223,7 +223,7 @@ def get_location_difference_metres(location1, location2):
     
     return (dNorth, dEast, H)
 
-def detect_landingpad(H, heading, location, is_gimbal_rotated=False, home_location=None):
+def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, home_location=None):
     """ TODO
         - get frame, logging current timestamp - frame timestamps
         - run detection on frame, get bboxes
