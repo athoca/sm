@@ -1,6 +1,7 @@
 import math
 import os
 import random
+import cv2
 from smartdrone.config import USE_FAKE_DETECTIONS
 # Create ID for each test
 FLYING_TEST_ID = random.randint(1,10000000)
@@ -223,6 +224,9 @@ def get_location_difference_metres(location1, location2):
     
     return (dNorth, dEast, H)
 
+
+from smartdrone.data_processing import compute_target_from_frame
+
 def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, home_location=None):
     """ TODO
         - get frame, logging current timestamp - frame timestamps
@@ -250,13 +254,16 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             return 0, None
         else:
             sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
-            # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
-            # TODO: log detected_target in m in North and East from current position
-            # TODO: detect landing pad here
-            is_detected = 0
-            detected_target = None
-            to_North = 10
-            to_East = 10
+            # Detect landing pad here
+            BGR_frame = stack["stack"] # TODO: Is BGR?
+            RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
+            to_North, to_East = compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated)
+            if to_North is not None:
+                is_detected = 0
+                detected_target = None
+            else:
+                detected_target = get_location_metres(current_location, to_North, to_East)
+                is_detected = 1
 
             # Save frame and detection for debug
             sd_logger.info("SAVE FRAME AND DETECTION for debug")
@@ -264,10 +271,9 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
             detection_key_name = ":".join([key_name,"detection:target"])
             save_stack_to_redis(r, stack, key_name)
-            # TODO: add more infor in the detection_dict
-            detection_dict = {"is_detected": is_detected}
+
+            detection_dict = {"is_detected": is_detected, "to_North": to_North, "to_East": to_East}
             save_dict_to_redis(r, detection_key_name, detection_dict)
-            # r.hmset(detection_key_name, detection_dict)
 
             return is_detected, detected_target
             # return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
