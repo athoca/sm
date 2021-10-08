@@ -6,6 +6,7 @@ from smartdrone.utils import sd_logger, do_nothing, \
                         get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree, degree2degree
 from smartdrone.utils import detect_landingpad, detect_yaw
 from smartdrone.config import AutoMission_Config, LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
+from smartdrone.config import TIME_STABLE_AFTER_NAVIGATION, TIME_STABLE_AFTER_GIMBAL, TIME_STABLE_AFTER_YAW
 import random
 import time
 from dronekit import VehicleMode
@@ -244,7 +245,7 @@ class PL_LandingPadSearch(ModeState):
     
     def _do_detection(self):
         # wait so the drone stable after moving
-        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
         sd_logger.info(self.vehicle.attitude)
@@ -262,7 +263,7 @@ class PL_LandingPadSearch(ModeState):
         if not self._is_detected:
             self.vehicle.channels.overrides['6'] = 1340 # 1340: gimbal rotated, 1642: gimbal original
             # wait so the gimbal stable after rotate gimbal
-            is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+            is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_GIMBAL)
             if is_mode_changed:
                 return
 
@@ -277,7 +278,7 @@ class PL_LandingPadSearch(ModeState):
                 self._logger("LandingPad target is at {}".format(self.detected_target))
             self.vehicle.channels.overrides['6'] = 1642
             # wait so gimbal rotate to orignal position
-            is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+            is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_GIMBAL)
             if is_mode_changed:
                 return
             self._logger("Rotated gimbal by overwriting channel 6 = 1642")
@@ -409,7 +410,7 @@ class PL_LandingPadGo(ModeState):
     
     def _do_detection_on_h2(self):
         # wait so the drone stable after moving
-        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
 
@@ -434,7 +435,7 @@ class PL_LandingPadGo(ModeState):
 
     def _do_detection_on_h1(self):
         # wait so the drone stable after moving
-        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
 
@@ -457,7 +458,7 @@ class PL_LandingPadGo(ModeState):
     
     def _do_preland_check(self):
         # wait so the drone stable after yawing
-        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_YAW)
         if is_mode_changed:
             return
 
@@ -507,7 +508,7 @@ class PL_LandingPadLand(ModeState):
             self._logger("Distance to CORRECT YAW: {}".format(dist))
             if dist < self.angle_error_threshold: # in degree
                 # wait for stable after yawing, then set land again
-                is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+                is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_YAW)
                 if is_mode_changed:
                     return
 
@@ -594,7 +595,7 @@ class PL_LandingPadLand(ModeState):
     
     def _do_detection_yaw(self):
         # wait so the drone stable after moving
-        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(1)
+        is_mode_changed = self.wait_and_monitor_vehicle_mode_change(TIME_STABLE_AFTER_NAVIGATION)
         if is_mode_changed:
             return
 

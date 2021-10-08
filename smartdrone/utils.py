@@ -1,6 +1,7 @@
 import math
 import os
 import random
+from smartdrone.config import USE_FAKE_DETECTIONS
 
 def is_on_Xavier():
     name = os.uname()[1]
@@ -211,22 +212,31 @@ def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
         - run detection on frame, get bboxes
         - if bboxes > 0, set self._is_detected = 1, build self.detected_target = from NED depend on is_gimbal_rotated
         """
-    frame = None # TODO: get current frame using redis client
-    if H >13:
-        is_detected = random.choice([0,0,1])
-    elif H > 10:
-        is_detected = random.choice([0,1,1,1,1,1,1,1])
-    else:
-        is_detected = 1
+    if USE_FAKE_DETECTIONS:
+        if H >13:
+            is_detected = random.choice([0,0,1])
+        elif H > 10:
+            is_detected = random.choice([0,1,1,1,1,1,1,1])
+        else:
+            is_detected = 1
 
-    detected_target = None
-    # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
-    # TODO: log detected_target in m in North and East from current position
-    if is_detected:
-        if home_location is not None:
-            detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
-        
-    return is_detected, detected_target
+        detected_target = None
+        if is_detected:
+            if home_location is not None:
+                detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
+        return is_detected, detected_target
+    else:
+        # TODO: get current frame using redis client
+        frame = load_stack_from_redis(r, "new_frame")
+        if not frame:
+            sd_logger.error("NO FRAME FOR KEY new_frame.")
+            return 0, None
+        else:
+            sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
+            # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
+            # TODO: log detected_target in m in North and East from current position
+            # TODO: detect landing pad here
+            return 0, None
 
 def detect_yaw(H, is_gimbal_rotated=False):
     """ TODO
@@ -234,10 +244,23 @@ def detect_yaw(H, is_gimbal_rotated=False):
         - run detection on frame, get bboxes
         - if bboxes > 0, detect_yaw
         """
-    if H > 4:
-        is_detected = random.choice([0,1,1,1,1,1,1,1])
-        detected_yaw = 0
+    if USE_FAKE_DETECTIONS:
+        if H > 4:
+            is_detected = random.choice([0,1,1,1,1,1,1,1])
+            detected_yaw = 0
+        else:
+            is_detected = 1
+            detected_yaw = 0
+        return is_detected, detected_yaw
     else:
-        is_detected = 1
-        detected_yaw = 0
-    return is_detected, detected_yaw
+        # TODO: get current frame using redis client
+        frame = load_stack_from_redis(r, "new_frame")
+        if not frame:
+            sd_logger.error("NO FRAME FOR KEY new_frame.")
+            return 0, 0
+        else:
+            sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
+            # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
+            # TODO: log detected_target in m in North and East from current position
+            # TODO: detect yaw here
+            return 1, 0
