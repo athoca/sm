@@ -2,6 +2,8 @@ import math
 import os
 import random
 from smartdrone.config import USE_FAKE_DETECTIONS
+# Create ID for each test
+FLYING_TEST_ID = random.randint(1,10000000)
 
 def is_on_Xavier():
     name = os.uname()[1]
@@ -206,7 +208,7 @@ def get_location_difference_metres(location1, location2):
     
     return (dNorth, dEast, H)
 
-def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
+def detect_landingpad(H, heading, location, is_gimbal_rotated=False, home_location=None):
     """ TODO
         - get frame, logging current timestamp - frame timestamps
         - run detection on frame, get bboxes
@@ -227,8 +229,8 @@ def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
         return is_detected, detected_target
     else:
         # TODO: get current frame using redis client
-        frame = load_stack_from_redis(r, "new_frame")
-        if not frame:
+        stack = load_stack_from_redis(r, "new_frame")
+        if not stack:
             sd_logger.error("NO FRAME FOR KEY new_frame.")
             return 0, None
         else:
@@ -236,7 +238,25 @@ def detect_landingpad(H, is_gimbal_rotated=False, home_location=None):
             # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
             # TODO: log detected_target in m in North and East from current position
             # TODO: detect landing pad here
-            return 0, None
+            is_detected = 0
+            detected_target = None
+            to_North = 10
+            to_East = 10
+
+            # Save frame and detection for debug
+            sd_logger.info("SAVE FRAME AND DETECTION for debug")
+            ts = stack["timestamp"]
+            key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
+            detection_key_name = ":".join([key_name,"detection:target"])
+            save_stack_to_redis(r, stack, key_name)
+            # TODO: add more infor in the detection_dict
+            detection_dict = {"is_detected": is_detected}
+            r.hmset(detection_key_name, detection_dict)
+
+            # return is_detected, detected_target
+            return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
+
+
 
 def detect_yaw(H, is_gimbal_rotated=False):
     """ TODO
@@ -254,8 +274,8 @@ def detect_yaw(H, is_gimbal_rotated=False):
         return is_detected, detected_yaw
     else:
         # TODO: get current frame using redis client
-        frame = load_stack_from_redis(r, "new_frame")
-        if not frame:
+        stack = load_stack_from_redis(r, "new_frame")
+        if not stack:
             sd_logger.error("NO FRAME FOR KEY new_frame.")
             return 0, 0
         else:
@@ -263,4 +283,17 @@ def detect_yaw(H, is_gimbal_rotated=False):
             # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
             # TODO: log detected_target in m in North and East from current position
             # TODO: detect yaw here
-            return 1, 0
+            is_detected = 1
+            detected_yaw = 0
+
+            # Save frame and detection for debug
+            sd_logger.info("SAVE FRAME AND DETECTION for debug")
+            ts = stack["timestamp"]
+            key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
+            detection_key_name = ":".join([key_name,"detection:yaw"])
+            save_stack_to_redis(r, stack, key_name)
+            # TODO: add more infor in the detection_dict
+            detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw}
+            r.hmset(detection_key_name, detection_dict)
+
+            return is_detected, detected_yaw

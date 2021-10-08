@@ -252,10 +252,12 @@ class PL_LandingPadSearch(ModeState):
         self._logger("Detecting landing pad at 1642.")
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
-        self._logger("Current heading: {}".format(self.vehicle.heading))
+        current_heading = self.vehicle.heading
+        self._logger("Current heading: {}".format(current_heading))
+        current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location
         # TODO: remove home_location argument
-        self._is_detected, self.detected_target = detect_landingpad(H=H, is_gimbal_rotated=False, home_location=home_location)
+        self._is_detected, self.detected_target = detect_landingpad(H=H, heading=current_heading, location=current_location, is_gimbal_rotated=False, home_location=home_location)
         self._logger("LandingPad Detection is {}".format(self._is_detected))
         if self._is_detected:
             self._logger("LandingPad target is at {}".format(self.detected_target))
@@ -270,9 +272,11 @@ class PL_LandingPadSearch(ModeState):
             self._logger("Rotated gimbal by overwriting channel 6 = 1340. Detecting landing pad at 1340.")
             H = self.vehicle.get_height()
             self._logger("Height from rangefinder: {}".format(H))
-            self._logger("Current heading: {}".format(self.vehicle.heading))
+            current_heading = self.vehicle.heading
+            self._logger("Current heading: {}".format(current_heading))
+            current_location = self.vehicle.location.global_relative_frame
             # TODO: remove home_location argument
-            self._is_detected, self.detected_target = detect_landingpad(H=H, is_gimbal_rotated=False, home_location=home_location)
+            self._is_detected, self.detected_target = detect_landingpad(H=H, heading=current_heading, location=current_location, is_gimbal_rotated=False, home_location=home_location)
             self._logger("LandingPad Detection is {}".format(self._is_detected))
             if self._is_detected:
                 self._logger("LandingPad target is at {}".format(self.detected_target))
@@ -409,11 +413,13 @@ class PL_LandingPadGo(ModeState):
         self.state_logging()
         H = self.vehicle.get_height()
         self._logger("Height from rangefinder: {}".format(H))
-        self._logger("Current heading: {}".format(self.vehicle.heading))
+        current_heading = self.vehicle.heading
+        self._logger("Current heading: {}".format(current_heading))
         self._logger("Detecting landing pad at 1642.")
+        current_location = self.vehicle.location.global_relative_frame
         home_location = self.vehicle.home_location
         # TODO: remove home_location argument, update current H
-        self._is_detected, self.detected_target = detect_landingpad(H=H, is_gimbal_rotated=False, home_location=home_location)
+        self._is_detected, self.detected_target = detect_landingpad(H=H, heading=current_heading, location=current_location, is_gimbal_rotated=False, home_location=home_location)
         self._logger("LandingPad Detection is {}".format(self._is_detected))
         if self._is_detected:
             self._logger("LandingPad target is at {}".format(self.detected_target))

@@ -3,9 +3,10 @@
 import dronekit
 from pymavlink import mavutil # Needed for command message definitions
 import time
-from smartdrone.utils import sd_logger, get_location_difference_metres
+from smartdrone.utils import sd_logger, get_location_difference_metres, FLYING_TEST_ID
 from smartdrone.utils import r
 import redis
+
 
 
 class SmartDrone(dronekit.Vehicle):
@@ -93,7 +94,7 @@ class SmartMode:
             ping_ok = False
         if ping_ok:
             # sd_logger.info("[{}]NOT IMPLEMENTED failsafe check".format(self.name))
-            self.state._logger("-------------------------------------- NOT IMPLEMENTED failsafe check")
+            self.state._logger("-----------------{}----------------- NOT IMPLEMENTED failsafe check".format(FLYING_TEST_ID))
             MODE = self.vehicle.mode.name
             PLND_ANGLE_MAX = self.vehicle.parameters['PLND_ANGLE_MAX']
             PLND_TACQ_DURATION = self.vehicle.parameters['PLND_TAR_ACQUIRE']
