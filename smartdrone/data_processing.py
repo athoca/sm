@@ -364,7 +364,7 @@ postprocessor = PostprocessYOLO(**postprocessor_args)
 
 
 import tensorrt as trt
-import common
+from smartdrone import common
 import os
 TRT_LOGGER = trt.Logger()
 
