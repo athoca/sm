@@ -2,6 +2,7 @@ import math
 import os
 import random
 import cv2
+from smartdrone import landingpad
 from smartdrone.config import USE_FAKE_DETECTIONS
 # Create ID for each test
 FLYING_TEST_ID = random.randint(1,10000000)
@@ -226,6 +227,7 @@ def get_location_difference_metres(location1, location2):
 
 
 from smartdrone.landingpad import compute_target_from_frame
+from smartdrone.yaw import compute_yaw_frome_frame
 
 def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, home_location=None):
     """ TODO
@@ -272,7 +274,7 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             detection_key_name = ":".join([key_name,"detection:target"])
             save_stack_to_redis(r, stack, key_name)
 
-            detection_dict = {"is_detected": is_detected, "to_North": to_North, "to_East": to_East}
+            detection_dict = {"is_detected": is_detected, "to_North": to_North, "to_East": to_East, "H":H, "heading":heading, "gimbal_rotated": is_gimbal_rotated}
             save_dict_to_redis(r, detection_key_name, detection_dict)
 
             return is_detected, detected_target
@@ -302,12 +304,15 @@ def detect_yaw(H, is_gimbal_rotated=False):
             return 0, 0
         else:
             sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
-            # TODO calculate detected_target based on frame, H and corrected using is_gimbal_rotated
-            # TODO: log detected_target in m in North and East from current position
-            # TODO: detect yaw here
-            is_detected = 1
+            # Detect landing pad here
+            is_detected = 0
             detected_yaw = 0
-
+            BGR_frame = stack["stack"] # TODO: Is BGR?
+            RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
+            detected_yaw, landing_pad_img = compute_yaw_frome_frame(RGB_img, H, is_gimbal_rotated)
+            if landing_pad_img is not None:
+                is_detected = 1
+            
             # Save frame and detection for debug
             sd_logger.info("SAVE FRAME AND DETECTION for debug")
             ts = stack["timestamp"]
@@ -315,8 +320,7 @@ def detect_yaw(H, is_gimbal_rotated=False):
             detection_key_name = ":".join([key_name,"detection:yaw"])
             save_stack_to_redis(r, stack, key_name)
             # TODO: add more infor in the detection_dict
-            detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw}
+            detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw, "H": H}
             save_dict_to_redis(r, detection_key_name, detection_dict)
-            # r.hmset(detection_key_name, detection_dict)
 
             return is_detected, detected_yaw
