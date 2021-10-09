@@ -462,8 +462,9 @@ def compute_target_NE_gimbal_1340(H, ux, vy, alpha_heading):
     delta_roll = -5 # gimbal error. Negative # Magic number (calibration)
     return compute_target_NE(H, ux, vy, alpha_heading, delta_pan, delta_tilt, delta_roll)
 
-def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=1.3):
+def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=2.0):
     bboxes, scores = landing_pad_detect(RGB_img)
+    print(bboxes, scores)
     bbox, score = filter_score_max(*validate_bbox_size(H, bboxes, scores, ratio))
     if bbox is None:
         return None, None, None, None, None, None
