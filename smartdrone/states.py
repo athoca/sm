@@ -455,10 +455,8 @@ class PL_LandingPadGo(ModeState):
         if USE_FAKE_TACQ:
             self._target_acquired = True
         else:
-            self._target_acquired = self.vehicle.plnd.TAcq > 0.5      
-        # self._target_acquired = self.vehicle.plnd.TAcq > 0.5
-        # self._target_acquired = True
-
+            self._target_acquired = self.vehicle.plnd.TAcq > 0.5
+        self._logger("Target acquired check is : {}".format(self._target_acquired))
 
 class PL_LandingPadLand(ModeState):
     # complete code: 0 => not completed, 1 => next: IRBeaconSearch, 2 => back: ManualControl = Landed
