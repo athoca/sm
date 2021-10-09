@@ -274,7 +274,7 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             detection_key_name = ":".join([key_name,"detection:target"])
             save_stack_to_redis(r, stack, key_name)
 
-            detection_dict = {"is_detected": is_detected, "to_North": to_North, "to_East": to_East, "H":H, "heading":heading, "gimbal_rotated": int(is_gimbal_rotated)}
+            detection_dict = {"is_detected": str(is_detected), "to_North": str(to_North), "to_East": str(to_East), "H":str(H), "heading":str(heading), "gimbal_rotated": str(is_gimbal_rotated)}
             save_dict_to_redis(r, detection_key_name, detection_dict)
 
             return is_detected, detected_target
@@ -320,7 +320,7 @@ def detect_yaw(H, is_gimbal_rotated=False):
             detection_key_name = ":".join([key_name,"detection:yaw"])
             save_stack_to_redis(r, stack, key_name)
             # TODO: add more infor in the detection_dict
-            detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw, "H": H, "gimbal_rotated":int(is_gimbal_rotated)}
+            detection_dict = {"is_detected": str(is_detected), "detected_yaw": str(detected_yaw), "H": str(H), "gimbal_rotated":str(is_gimbal_rotated)}
             save_dict_to_redis(r, detection_key_name, detection_dict)
 
             return is_detected, detected_yaw
