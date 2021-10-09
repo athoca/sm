@@ -260,7 +260,7 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             BGR_frame = stack["stack"] # TODO: Is BGR?
             RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
             to_North, to_East, _, _, _, _ = compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated)
-            if to_North is not None:
+            if to_North is None:
                 is_detected = 0
                 detected_target = None
             else:
