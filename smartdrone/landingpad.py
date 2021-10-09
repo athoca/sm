@@ -473,8 +473,13 @@ def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=2.0)
         l,t,w,h = bbox.astype(np.int32)
         u_x = l + w/2
         v_y = t + h/2
+        print(u_x, v_y)
         if not is_gimbal_rotated:
             to_North, to_East = compute_target_NE_gimbal_1642(H, u_x, v_y, heading)
+            print("AAAAAAAAAA")
+            print(to_North, to_East)
         else:
             to_North, to_East = compute_target_NE_gimbal_1340(H, u_x, v_y, heading)
+            print("BBBBBBBBBB")
+            print(to_North, to_East)
         return to_North, to_East, l,t,w,h
