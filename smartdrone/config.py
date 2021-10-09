@@ -24,6 +24,7 @@ class LandingPadLand_Config:
     H_YAW = 3 # in meter, quan tinh => se xuong thap hon.
     ANGLE_ERROR_THRESHOLD = 4 # in degree
 
+DELTA_YAW_GIMBAL = 6 # CCW # Difference between heading of drone and head of gimbal camera
 USE_FAKE_DETECTIONS = False
 TIME_STABLE_AFTER_NAVIGATION = 5
 TIME_STABLE_AFTER_YAW = 5

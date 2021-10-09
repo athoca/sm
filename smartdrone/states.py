@@ -6,7 +6,7 @@ from smartdrone.utils import sd_logger, do_nothing, \
                         get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree, degree2degree
 from smartdrone.utils import detect_landingpad, detect_yaw
 from smartdrone.config import AutoMission_Config, LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
-from smartdrone.config import TIME_STABLE_AFTER_NAVIGATION, TIME_STABLE_AFTER_GIMBAL, TIME_STABLE_AFTER_YAW
+from smartdrone.config import TIME_STABLE_AFTER_NAVIGATION, TIME_STABLE_AFTER_GIMBAL, TIME_STABLE_AFTER_YAW, DELTA_YAW_GIMBAL
 import random
 import time
 from dronekit import VehicleMode
@@ -383,7 +383,7 @@ class PL_LandingPadGo(ModeState):
                 self._doing_on_h1 = False
                 self._is_yawing = True
                 # TODO: update value for delta_yaw
-                delta_yaw = self.vehicle.heading - 6 # magic value?
+                delta_yaw = self.vehicle.heading - DELTA_YAW_GIMBAL # magic value?
                 self._target_yaw = degree2degree(self.detected_yaw + delta_yaw)
             return
 
@@ -521,7 +521,7 @@ class PL_LandingPadLand(ModeState):
                 self._target_yaw = self.vehicle.heading
             else:
                 # TODO: update value for delta_yaw
-                delta_yaw = self.vehicle.heading - 6 # magic value?
+                delta_yaw = self.vehicle.heading - DELTA_YAW_GIMBAL # magic value?
                 self._target_yaw = degree2degree(self.detected_yaw + delta_yaw)
             return
 
