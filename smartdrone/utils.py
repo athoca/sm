@@ -320,7 +320,7 @@ def detect_yaw(H, is_gimbal_rotated=False):
             detection_key_name = ":".join([key_name,"detection:yaw"])
             save_stack_to_redis(r, stack, key_name)
             # TODO: add more infor in the detection_dict
-            detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw, "H": H, "gimbal_rotated":is_gimbal_rotated}
+            detection_dict = {"is_detected": is_detected, "detected_yaw": detected_yaw, "H": H, "gimbal_rotated":int(is_gimbal_rotated)}
             save_dict_to_redis(r, detection_key_name, detection_dict)
 
             return is_detected, detected_yaw
