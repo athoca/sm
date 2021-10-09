@@ -274,7 +274,7 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             detection_key_name = ":".join([key_name,"detection:target"])
             save_stack_to_redis(r, stack, key_name)
 
-            detection_dict = {"is_detected": is_detected, "to_North": to_North, "to_East": to_East, "H":H, "heading":heading, "gimbal_rotated": is_gimbal_rotated}
+            detection_dict = {"is_detected": is_detected, "to_North": to_North, "to_East": to_East, "H":H, "heading":heading, "gimbal_rotated": int(is_gimbal_rotated)}
             save_dict_to_redis(r, detection_key_name, detection_dict)
 
             return is_detected, detected_target
