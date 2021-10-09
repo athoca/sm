@@ -6,7 +6,7 @@ from smartdrone.utils import sd_logger, do_nothing, \
                         get_distance_metres, get_location_metres, get_location_difference_metres, rad2degree, degree2degree
 from smartdrone.utils import detect_landingpad, detect_yaw
 from smartdrone.config import AutoMission_Config, LandingPadSearch_Config, LandingPadGo_Config, LandingPadLand_Config
-from smartdrone.config import TIME_STABLE_AFTER_NAVIGATION, TIME_STABLE_AFTER_GIMBAL, TIME_STABLE_AFTER_YAW, DELTA_YAW_GIMBAL
+from smartdrone.config import TIME_STABLE_AFTER_NAVIGATION, TIME_STABLE_AFTER_GIMBAL, TIME_STABLE_AFTER_YAW, DELTA_YAW_GIMBAL, USE_FAKE_TACQ
 import random
 import time
 from dronekit import VehicleMode
@@ -452,8 +452,12 @@ class PL_LandingPadGo(ModeState):
         self._logger("Current heading: {}".format(self.vehicle.heading))
         self._logger("Original heading: {}".format(self.mode._original_heading))
         # TODO: check PLND TAcq
+        if USE_FAKE_TACQ:
+            self._target_acquired = True
+        else:
+            self._target_acquired = self.vehicle.plnd.TAcq > 0.5      
         # self._target_acquired = self.vehicle.plnd.TAcq > 0.5
-        self._target_acquired = True
+        # self._target_acquired = True
 
 
 class PL_LandingPadLand(ModeState):
