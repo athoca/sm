@@ -271,9 +271,9 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             sd_logger.info("SAVE FRAME AND DETECTION for debug")
             ts = stack["timestamp"]
             key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
-            detection_key_name = ":".join([key_name,"detection:target"])
             save_stack_to_redis(r, stack, key_name)
-
+            
+            detection_key_name = ":".join([key_name,"detection:target"])
             detection_dict = {"is_detected": str(is_detected), "to_North": str(to_North), "to_East": str(to_East), "H":str(H), "heading":str(heading), "gimbal_rotated": str(is_gimbal_rotated)}
             save_dict_to_redis(r, detection_key_name, detection_dict)
 

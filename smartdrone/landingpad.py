@@ -464,12 +464,12 @@ def compute_target_NE_gimbal_1340(H, ux, vy, alpha_heading):
 
 def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=2.0):
     bboxes, scores = landing_pad_detect(RGB_img)
-    # print(bboxes, scores, ratio)
+    print(bboxes, scores, ratio)
     if bboxes is None:
         return None, None, None, None, None, None
     else:
         bbox, score = filter_score_max(*validate_bbox_size(H, bboxes, scores, ratio))
-        # print(bbox, score)
+        print(bbox, score)
         if bbox is None:
             return None, None, None, None, None, None
         else:
