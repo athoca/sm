@@ -464,22 +464,25 @@ def compute_target_NE_gimbal_1340(H, ux, vy, alpha_heading):
 
 def compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=2.0):
     bboxes, scores = landing_pad_detect(RGB_img)
-    print(bboxes, scores, ratio)
-    bbox, score = filter_score_max(*validate_bbox_size(H, bboxes, scores, ratio))
-    # print(bbox, score)
-    if bbox is None:
+    # print(bboxes, scores, ratio)
+    if bboxes is None:
         return None, None, None, None, None, None
     else:
-        l,t,w,h = bbox.astype(np.int32)
-        u_x = l + w/2
-        v_y = t + h/2
-        # print(u_x, v_y)
-        if not is_gimbal_rotated:
-            to_North, to_East = compute_target_NE_gimbal_1642(H, u_x, v_y, heading)
-            # print("AAAAAAAAAA")
-            # print(to_North, to_East)
+        bbox, score = filter_score_max(*validate_bbox_size(H, bboxes, scores, ratio))
+        # print(bbox, score)
+        if bbox is None:
+            return None, None, None, None, None, None
         else:
-            to_North, to_East = compute_target_NE_gimbal_1340(H, u_x, v_y, heading)
-            # print("BBBBBBBBBB")
-            # print(to_North, to_East)
-        return to_North, to_East, l,t,w,h
+            l,t,w,h = bbox.astype(np.int32)
+            u_x = l + w/2
+            v_y = t + h/2
+            # print(u_x, v_y)
+            if not is_gimbal_rotated:
+                to_North, to_East = compute_target_NE_gimbal_1642(H, u_x, v_y, heading)
+                # print("AAAAAAAAAA")
+                # print(to_North, to_East)
+            else:
+                to_North, to_East = compute_target_NE_gimbal_1340(H, u_x, v_y, heading)
+                # print("BBBBBBBBBB")
+                # print(to_North, to_East)
+            return to_North, to_East, l,t,w,h
