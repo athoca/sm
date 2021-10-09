@@ -379,7 +379,7 @@ def get_engine_2(engine_file_path=""):
         return None
 
 # Load engine
-engine_file_path = "weights/yolov3_fp16_608x1056.trt"
+engine_file_path = "/home/bootai/workspace/sm/weights/yolov3_fp16_608x1056.trt"
 engine = get_engine_2(engine_file_path)
 context = engine.create_execution_context()
 inputs, outputs, bindings, stream = common.allocate_buffers(engine)
