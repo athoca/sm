@@ -235,50 +235,55 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
         - run detection on frame, get bboxes
         - if bboxes > 0, set self._is_detected = 1, build self.detected_target = from NED depend on is_gimbal_rotated
         """
-    if USE_FAKE_DETECTIONS:
-        if H >13:
-            is_detected = random.choice([0,0,1])
-        elif H > 10:
-            is_detected = random.choice([0,1,1,1,1,1,1,1])
-        else:
-            is_detected = 1
-
-        detected_target = None
-        if is_detected:
-            if home_location is not None:
-                detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
-        return is_detected, detected_target
-    else:
-        # TODO: get current frame using redis client
-        stack = load_stack_from_redis(r, "new_frame")
-        if not stack:
-            sd_logger.error("NO FRAME FOR KEY new_frame.")
-            return 0, None
-        else:
-            sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
-            # Detect landing pad here
-            BGR_frame = stack["stack"] # TODO: Is BGR?
-            RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
-            to_North, to_East, _, _, _, _ = compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated)
-            if to_North is None:
-                is_detected = 0
-                detected_target = None
+    try:
+        if USE_FAKE_DETECTIONS:
+            if H >13:
+                is_detected = random.choice([0,0,1])
+            elif H > 10:
+                is_detected = random.choice([0,1,1,1,1,1,1,1])
             else:
-                detected_target = get_location_metres(current_location, to_North, to_East)
                 is_detected = 1
 
-            # Save frame and detection for debug
-            sd_logger.info("SAVE FRAME AND DETECTION for debug")
-            ts = stack["timestamp"]
-            key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
-            save_stack_to_redis(r, stack, key_name)
-            
-            detection_key_name = ":".join([key_name,"detection:target"])
-            detection_dict = {"is_detected": str(is_detected), "to_North": str(to_North), "to_East": str(to_East), "H":str(H), "heading":str(heading), "gimbal_rotated": str(is_gimbal_rotated)}
-            save_dict_to_redis(r, detection_key_name, detection_dict)
-
+            detected_target = None
+            if is_detected:
+                if home_location is not None:
+                    detected_target = LocationGlobalRelative(home_location.lat, home_location.lon, 0)
             return is_detected, detected_target
-            # return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
+        else:
+            # TODO: get current frame using redis client
+            stack = load_stack_from_redis(r, "new_frame")
+            if not stack:
+                sd_logger.error("NO FRAME FOR KEY new_frame.")
+                return 0, None
+            else:
+                sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
+                # Detect landing pad here
+                BGR_frame = stack["stack"] # TODO: Is BGR?
+                RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
+                to_North, to_East, _, _, _, _ = compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated)
+                if to_North is None:
+                    is_detected = 0
+                    detected_target = None
+                else:
+                    detected_target = get_location_metres(current_location, to_North, to_East)
+                    is_detected = 1
+
+                # Save frame and detection for debug
+                sd_logger.info("SAVE FRAME AND DETECTION for debug")
+                ts = stack["timestamp"]
+                key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
+                save_stack_to_redis(r, stack, key_name)
+
+                detection_key_name = ":".join([key_name,"detection:target"])
+                detection_dict = {"is_detected": str(is_detected), "to_North": str(to_North), "to_East": str(to_East), "H":str(H), "heading":str(heading), "gimbal_rotated": str(is_gimbal_rotated)}
+                save_dict_to_redis(r, detection_key_name, detection_dict)
+
+                return is_detected, detected_target
+                # return 1, LocationGlobalRelative(home_location.lat, home_location.lon, 0)
+    except Exception as e:
+        sd_logger.error("ERROR when detecting landingpad")
+        sd_logger.error(str(e))
+        return 0, None
 
 
 
@@ -288,39 +293,44 @@ def detect_yaw(H, is_gimbal_rotated=False):
         - run detection on frame, get bboxes
         - if bboxes > 0, detect_yaw
         """
-    if USE_FAKE_DETECTIONS:
-        if H > 4:
-            is_detected = random.choice([0,1,1,1,1,1,1,1])
-            detected_yaw = 0
-        else:
-            is_detected = 1
-            detected_yaw = 0
-        return is_detected, detected_yaw
-    else:
-        # TODO: get current frame using redis client
-        stack = load_stack_from_redis(r, "new_frame")
-        if not stack:
-            sd_logger.error("NO FRAME FOR KEY new_frame.")
-            return 0, 0
-        else:
-            sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
-            # Detect landing pad here
-            is_detected = 0
-            detected_yaw = 0
-            BGR_frame = stack["stack"] # TODO: Is BGR?
-            RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
-            detected_yaw, landing_pad_img = compute_yaw_frome_frame(RGB_img, H, is_gimbal_rotated)
-            if landing_pad_img is not None:
+    try: 
+        if USE_FAKE_DETECTIONS:
+            if H > 4:
+                is_detected = random.choice([0,1,1,1,1,1,1,1])
+                detected_yaw = 0
+            else:
                 is_detected = 1
-            
-            # Save frame and detection for debug
-            sd_logger.info("SAVE FRAME AND DETECTION for debug")
-            ts = stack["timestamp"]
-            key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
-            detection_key_name = ":".join([key_name,"detection:yaw"])
-            save_stack_to_redis(r, stack, key_name)
-            # TODO: add more infor in the detection_dict
-            detection_dict = {"is_detected": str(is_detected), "detected_yaw": str(detected_yaw), "H": str(H), "gimbal_rotated":str(is_gimbal_rotated)}
-            save_dict_to_redis(r, detection_key_name, detection_dict)
-
+                detected_yaw = 0
             return is_detected, detected_yaw
+        else:
+            # TODO: get current frame using redis client
+            stack = load_stack_from_redis(r, "new_frame")
+            if not stack:
+                sd_logger.error("NO FRAME FOR KEY new_frame.")
+                return 0, 0
+            else:
+                sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
+                # Detect landing pad here
+                is_detected = 0
+                detected_yaw = 0
+                BGR_frame = stack["stack"] # TODO: Is BGR?
+                RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
+                detected_yaw, landing_pad_img = compute_yaw_frome_frame(RGB_img, H, is_gimbal_rotated)
+                if landing_pad_img is not None:
+                    is_detected = 1
+                
+                # Save frame and detection for debug
+                sd_logger.info("SAVE FRAME AND DETECTION for debug")
+                ts = stack["timestamp"]
+                key_name = ":".join([str(FLYING_TEST_ID), str(ts)])
+                detection_key_name = ":".join([key_name,"detection:yaw"])
+                save_stack_to_redis(r, stack, key_name)
+                # TODO: add more infor in the detection_dict
+                detection_dict = {"is_detected": str(is_detected), "detected_yaw": str(detected_yaw), "H": str(H), "gimbal_rotated":str(is_gimbal_rotated)}
+                save_dict_to_redis(r, detection_key_name, detection_dict)
+
+                return is_detected, detected_yaw
+    except Exception as e:
+        sd_logger.error("ERROR when detecting yaw")
+        sd_logger.error(str(e))
+        return 0, 0
