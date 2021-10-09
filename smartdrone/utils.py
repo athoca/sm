@@ -225,7 +225,7 @@ def get_location_difference_metres(location1, location2):
     return (dNorth, dEast, H)
 
 
-from smartdrone.data_processing import compute_target_from_frame
+from smartdrone.landingpad import compute_target_from_frame
 
 def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, home_location=None):
     """ TODO
