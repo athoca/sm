@@ -25,7 +25,7 @@ class LandingPadLand_Config:
     ANGLE_ERROR_THRESHOLD = 4 # in degree
 
 USE_FAKE_DETECTIONS = False
-USE_FAKE_TACQ = True
+USE_FAKE_TACQ = False
 
 DELTA_YAW_GIMBAL = 6 # CCW # Difference between heading of drone and head of gimbal camera
 TIME_STABLE_AFTER_NAVIGATION = 5
