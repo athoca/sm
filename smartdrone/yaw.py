@@ -152,8 +152,12 @@ def compute_yaw_frome_frame(RGB_img, H, is_gimbal_rotated):
     heading = 0
     _, _, l, t, w, h = compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated, ratio=2)
     if l is not None:
+        l = max(0,l)
+        t = max(0,t)
+        b = min(t+h, RGB_img.shape[0])
+        r = min(l+w, RGB_img.shape[1])
         BGR_img = cv2.cvtColor(RGB_img, cv2.COLOR_BGR2RGB)
-        landing_pad_img = BGR_img[t:t+h, l:l+w]
+        landing_pad_img = BGR_img[t:b, l:r]
         try:
             yaw_angle = detect_yaw(landing_pad_img, H)
         except Exception as e:
