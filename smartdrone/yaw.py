@@ -123,16 +123,14 @@ def rotate_image(image, angle):
 
 def compute_yaw_value(masked_img, angle):
     rotated = rotate_image(masked_img, angle) # In CCW
-#     plt.imshow(rotated, cmap = 'gray')
-#     plt.show()
+    ret, rotated = cv2.threshold(rotated, 150, 255, 0)
+    # plt.imshow(rotated, cmap = 'gray')
+    # plt.show()
     size = rotated.shape[0]
     c = int(size/2)
 
-    top_sum = np.sum(rotated[c-100:c,c])
-    bottom_sum = np.sum(rotated[c:c+100,c])
-    
-    top_sum = np.sum(rotated[c-50:c,c])
-    bottom_sum = np.sum(rotated[c:c+50,c])
+    top_sum = np.sum(rotated[c-40:c, c-15:c+15])
+    bottom_sum = np.sum(rotated[c:c+40, c-15:c+15])
     
     if top_sum > bottom_sum: # beacon in bottom part
         return angle # drone yaw in CW 
