@@ -276,7 +276,7 @@ class PL_LandingPadSearch(ModeState):
             self._logger("Current heading: {}".format(current_heading))
             current_location = self.vehicle.location.global_relative_frame
             # TODO: remove home_location argument
-            self._is_detected, self.detected_target = detect_landingpad(H=H, heading=current_heading, current_location=current_location, is_gimbal_rotated=False, home_location=home_location)
+            self._is_detected, self.detected_target = detect_landingpad(H=H, heading=current_heading, current_location=current_location, is_gimbal_rotated=True, home_location=home_location)
             self._logger("LandingPad Detection is {}".format(self._is_detected))
             if self._is_detected:
                 self._logger("LandingPad target is at {}".format(self.detected_target))
