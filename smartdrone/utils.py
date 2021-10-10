@@ -258,8 +258,9 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
             else:
                 sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
                 ts = stack["timestamp"]
-                if time.time() - ts > 3:
-                    sd_logger.info("Redis wrong. Timestamp is old, can not be used.")
+                ts_dist = time.time() - ts
+                if ts_dist > 3:
+                    sd_logger.info("Redis wrong. Timestamp is old, dist = {}, can not be used.".format(ts_dist))
                     return 0, None
 
                 # Detect landing pad here
@@ -316,10 +317,11 @@ def detect_yaw(H, is_gimbal_rotated=False):
             else:
                 sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
                 ts = stack["timestamp"]
-                if time.time() - ts > 3:
-                    sd_logger.info("Redis wrong. Timestamp is old, can not be used.")
+                ts_dist = time.time() - ts
+                if ts_dist > 3:
+                    sd_logger.info("Redis wrong. Timestamp is old, dist = {}, can not be used.".format(ts_dist))
                     return 0, None
-                    
+
                 # Detect landing pad here
                 is_detected = 0
                 detected_yaw = 0
