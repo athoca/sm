@@ -257,8 +257,13 @@ def detect_landingpad(H, heading, current_location, is_gimbal_rotated=False, hom
                 return 0, None
             else:
                 sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
+                ts = stack["timestamp"]
+                if time.time() - ts > 3:
+                    sd_logger.info("Redis wrong. Timestamp is old, can not be used.")
+                    return 0, None
+
                 # Detect landing pad here
-                BGR_frame = stack["stack"] # TODO: Is BGR?
+                BGR_frame = stack["stack"] # TODO: Is BGR!
                 RGB_img = cv2.cvtColor(BGR_frame, cv2.COLOR_BGR2RGB)
                 to_North, to_East, _, _, _, _ = compute_target_from_frame(RGB_img, H, heading, is_gimbal_rotated)
                 if to_North is None:
@@ -310,6 +315,11 @@ def detect_yaw(H, is_gimbal_rotated=False):
                 return 0, 0
             else:
                 sd_logger.info("GET FRAME FOR KEY new_frame for detection.")
+                ts = stack["timestamp"]
+                if time.time() - ts > 3:
+                    sd_logger.info("Redis wrong. Timestamp is old, can not be used.")
+                    return 0, None
+                    
                 # Detect landing pad here
                 is_detected = 0
                 detected_yaw = 0
