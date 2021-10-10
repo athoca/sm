@@ -27,7 +27,7 @@ class LandingPadLand_Config:
 USE_FAKE_DETECTIONS = False
 USE_FAKE_TACQ = False
 
-DELTA_YAW_GIMBAL = 6 # CCW # Difference between heading of drone and head of gimbal camera
+DELTA_YAW_GIMBAL = 3 # 6 => 3 # CCW # Difference between heading of drone and head of gimbal camera
 TIME_STABLE_AFTER_NAVIGATION = 5
 TIME_STABLE_AFTER_YAW = 5
 TIME_STABLE_AFTER_GIMBAL = 3
