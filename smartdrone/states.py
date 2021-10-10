@@ -470,7 +470,7 @@ class PL_LandingPadLand(ModeState):
         self._target_yaw = None
         self._target_acquired = True # Now assumpt that precision landing sucessfully, _target_acquired always True => never IRBeaconSearch
         # sequence of 3 steps of the state:
-        self._descending = True         # descend
+        self._descending = False         # descend False: only land, not yaw!!!!
         self._doing_on_H = False    # detect yaw
         self._is_yawing = False     # second time yaw
         self._set_vehicle_land_mode(wait_ready=True, wait_time=2)
