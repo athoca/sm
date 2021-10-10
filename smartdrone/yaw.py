@@ -124,8 +124,8 @@ def rotate_image(image, angle):
 def compute_yaw_value(masked_img, angle):
     rotated = rotate_image(masked_img, angle) # In CCW
     ret, rotated = cv2.threshold(rotated, 150, 255, 0)
-    # plt.imshow(rotated, cmap = 'gray')
-    # plt.show()
+    plt.imshow(rotated, cmap = 'gray')
+    plt.show()
     size = rotated.shape[0]
     c = int(size/2)
 
